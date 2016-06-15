@@ -113,6 +113,7 @@ func main() {
 
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 	//http.Handle("/", http.FileServer(http.Dir("./public/client")))
 
 	/*ticker := time.NewTicker(time.Millisecond * 5000)

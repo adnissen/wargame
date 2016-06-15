@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <head>
 <meta charset="utf-8">
+<script type="text/javascript" src="/public/dist/phaser.js"></script>
+  <style type="text/css">
+      body {
+          margin: 0;
+      }
+  </style>
 <script>
 window.addEventListener("load", function(evt) {
 
@@ -60,6 +66,19 @@ window.addEventListener("load", function(evt) {
         ws.close();
         return false;
     };
+
+    /* PHASER GAME CLIENT BEGINS HEREEEEEEE */
+
+    var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+
+    function preload() {
+    }
+
+    function create() {
+    }
+
+    function update() {
+    }
 
 });
 </script>
