@@ -1,0 +1,48 @@
+package gameclient
+
+import (
+	"encoding/json"
+
+	"github.com/adnissen/wargame/src/packages/army"
+	"github.com/gorilla/websocket"
+	"github.com/satori/go.uuid"
+)
+
+type GameClient struct {
+	wbs         *websocket.Conn
+	Army        army.Army
+	CurrentGame uuid.UUID
+}
+
+type GenericResponse struct {
+	MessageType string
+	Message     string
+}
+
+func (g *GameClient) SendMessage(m []byte) {
+	g.wbs.WriteMessage(1, m)
+}
+
+func (g *GameClient) SendMessageOfType(mt string, m []byte) {
+	gr := GenericResponse{MessageType: mt, Message: string(m)}
+	j, _ := json.Marshal(gr)
+	g.wbs.WriteMessage(1, j)
+}
+
+func (g *GameClient) CompareWebSocketConn(c *websocket.Conn) bool {
+	return c == g.wbs
+}
+
+func (g *GameClient) SetCurrentGame(uid uuid.UUID) {
+	g.CurrentGame = uid
+}
+
+func (g *GameClient) ResetCurrentGame() {
+	g.CurrentGame = uuid.UUID{}
+}
+
+func CreateGameClient(c *websocket.Conn) *GameClient {
+	ret := GameClient{}
+	ret.wbs = c
+	return &ret
+}
