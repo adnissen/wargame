@@ -70,14 +70,96 @@ window.addEventListener("load", function(evt) {
     /* PHASER GAME CLIENT BEGINS HEREEEEEEE */
 
     var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+    var tileArray;
+    var selectedTile = 1;
+    var key1;
+    var key2;
+    var key3;
+    var mouseDown = false;
 
     function preload() {
+      //
+      game.load.image('tile_outline', '/public/client/assets/sprites/tiles/tile_outline.png');
+      game.load.image('tile_outline_red', 'public/client/assets/sprites/tiles/tile_outline_red.png');
+      game.load.image('grass1', 'public/client/assets/sprites/tiles/grass1.png');
+      game.load.image('water1', 'public/client/assets/sprites/tiles/water1.png');
+    }
+
+    var MapTile = function(x, y, key){
+      this.sprite = game.add.sprite(x, y, key);
+      this.sprite.inputEnabled = true;
+
+      this.sprite.events.onInputDown.add(function(){
+        switch (selectedTile) {
+          case 1:
+            this.sprite.loadTexture('grass1');
+            break;
+          case 2:
+            this.sprite.loadTexture('water1');
+            break;
+          default:
+            break;
+        }
+      }, this);
+
+      this.sprite.events.onInputOver.add(function(){
+
+      }, this)
+    }
+
+    var updateSelectedTile = function(newVal){
+      console.log(newVal.event.code)
+
+      switch (newVal.event.code) {
+        case 'Digit1':
+          selectedTile = 1;
+          break;
+        case 'Digit2':
+          selectedTile = 2;
+          break;
+        case 'Digit3':
+          selectedTile = 3;
+          break;
+        default:
+          selectedTile = 1;
+      }
+
+    }
+
+    function createMapArray(w, h){
+      var tilesArray = new Array(w);
+      for (var i = 0; i < h; i++) {
+        tilesArray[i] = new Array(w);
+        for (var k = 0; k < h; k++) {
+          tilesArray[i][k] = new MapTile(i * 32, k * 32, 'tile_outline_red');
+        }
+      }
+      return tilesArray;
     }
 
     function create() {
+      tileArray = createMapArray(50, 50);
+
+      key1 = game.input.keyboard.addKey(Phaser.Keyboard.ONE);
+      key1.onDown.add(updateSelectedTile, this);
+      key2 = game.input.keyboard.addKey(Phaser.Keyboard.TWO);
+      key2.onDown.add(updateSelectedTile, this);
+      key3 = game.input.keyboard.addKey(Phaser.Keyboard.THREE);
+      key3.onDown.add(updateSelectedTile, this);
+
+
+      game.world.scale.set(1);
     }
 
     function update() {
+      if (game.input.activePointer.withinGame)
+      {
+          game.input.enabled = true;
+      }
+      else
+      {
+          game.input.enabled = false;
+      }
     }
 
 });
