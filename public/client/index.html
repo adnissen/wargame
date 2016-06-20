@@ -75,6 +75,8 @@ window.addEventListener("load", function(evt) {
     var key1;
     var key2;
     var key3;
+    var key4;
+    var keyE;
     var mouseDown = false;
 
     function preload() {
@@ -83,19 +85,43 @@ window.addEventListener("load", function(evt) {
       game.load.image('tile_outline_red', 'public/client/assets/sprites/tiles/tile_outline_red.png');
       game.load.image('grass1', 'public/client/assets/sprites/tiles/grass1.png');
       game.load.image('water1', 'public/client/assets/sprites/tiles/water1.png');
+      game.load.image('castle1', 'public/client/assets/sprites/tiles/castle1.png');
+      game.load.image('blank', 'public/client/assets/sprites/tiles/blank.png');
     }
 
     var MapTile = function(x, y, key){
       this.sprite = game.add.sprite(x, y, key);
+      this.overlay = game.add.sprite(x, y, 'blank');
       this.sprite.inputEnabled = true;
+      this.walkable = false;
+      this.spawn = false;
+      this.tileType = '';
+      this.castle = false;
+      this.capturable = false;
+      this.x = x / 32;
+      this.y = y / 32;
 
       this.sprite.events.onInputDown.add(function(){
         switch (selectedTile) {
           case 1:
             this.sprite.loadTexture('grass1');
+            this.tileType = 'grass';
+            this.walkable = true;
             break;
           case 2:
             this.sprite.loadTexture('water1');
+            this.tileType = 'water';
+            this.walkable = false;
+            break;
+          case 3:
+            this.overlay.loadTexture('castle1');
+            this.castle = true;
+            this.capturable = true;
+            break;
+          case 4:
+            this.overlay.loadTexture('blank');
+            this.castle = false;
+            this.capturable = false;
             break;
           default:
             break;
@@ -120,6 +146,9 @@ window.addEventListener("load", function(evt) {
         case 'Digit3':
           selectedTile = 3;
           break;
+        case 'Digit4':
+          selectedTile = 4;
+          break;
         default:
           selectedTile = 1;
       }
@@ -128,7 +157,7 @@ window.addEventListener("load", function(evt) {
 
     function createMapArray(w, h){
       var tilesArray = new Array(w);
-      for (var i = 0; i < h; i++) {
+      for (var i = 0; i < w; i++) {
         tilesArray[i] = new Array(w);
         for (var k = 0; k < h; k++) {
           tilesArray[i][k] = new MapTile(i * 32, k * 32, 'tile_outline_red');
@@ -146,9 +175,34 @@ window.addEventListener("load", function(evt) {
       key2.onDown.add(updateSelectedTile, this);
       key3 = game.input.keyboard.addKey(Phaser.Keyboard.THREE);
       key3.onDown.add(updateSelectedTile, this);
+      key4 = game.input.keyboard.addKey(Phaser.Keyboard.FOUR);
+      key4.onDown.add(updateSelectedTile, this);
 
+      keyE = game.input.keyboard.addKey(Phaser.Keyboard.E);
+      keyE.onDown.add(exportMap, this);
 
       game.world.scale.set(1);
+    }
+
+    function exportMap(){
+      var ret = {};
+      ret.map = tileArray;
+      for (var i = 0; i < ret.map.length; i++) {
+        for (var k = 0; k < ret.map[1].length; k++) {
+          var tileJson = {};
+          var tileObj = ret.map[i][k];
+          tileJson.walkable = tileObj.walkable;
+          tileJson.spawn = tileObj.spawn;
+          tileJson.tileType = tileObj.tileType;
+          tileJson.castle = tileObj.castle;
+          tileJson.capturable = tileObj.capturable;
+          tileJson.x = tileObj.x;
+          tileJson.y = tileObj.y;
+          ret.map[i][k] = tileJson;
+
+        }
+      }
+      console.log(JSON.stringify(ret));
     }
 
     function update() {
