@@ -40,7 +40,7 @@ window.addEventListener("load", function(evt) {
             var message = JSON.parse(evt.data);
             switch (message.MessageType) {
               case 'announce':
-                alert(message.Message);
+                //alert(message.Message);
                 break;
               default:
                 console.log("Message " + message + " recieved with no handler!")

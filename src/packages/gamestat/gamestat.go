@@ -1,11 +1,13 @@
 package gamestat
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/adnissen/wargame/src/packages/army"
 	"github.com/adnissen/wargame/src/packages/gameclient"
 	"github.com/adnissen/wargame/src/packages/gamemap"
+	"github.com/adnissen/wargame/src/packages/units"
 	"github.com/satori/go.uuid"
 )
 
@@ -39,6 +41,10 @@ func (g *GameStat) EndGame() {
 	g.Status = "ENDED"
 }
 
+func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit) {
+	defender.Attributes.Hps -= attacker.Attributes.Dmg
+}
+
 func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat {
 	if !reflect.DeepEqual(p1.CurrentGame, uuid.UUID{}) || !reflect.DeepEqual(p2.CurrentGame, uuid.UUID{}) {
 		return nil
@@ -48,6 +54,9 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gamemap.GetMap()}
 	gstat.SetCurrentGameForAllPlayers()
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
+	fmt.Println(gstat.Armies[0].Squads[0].Grunts[0].Attributes.Hps)
+	gstat.Attack(&gstat.Armies[1].Squads[0].Grunts[0], &gstat.Armies[0].Squads[0].Grunts[0])
+	fmt.Println(gstat.Armies[0].Squads[0].Grunts[0].Attributes.Hps)
 
 	return &gstat
 }

@@ -64,7 +64,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	log.Printf("client connected %s", r.RemoteAddr)
 	newClient := insertConnIntoClients(c)
-	newA := army.Army{Squads: []int{0, 0, 0}}
+	newA := army.Army{Squads: []units.Squad{units.GetSquad(0), units.GetSquad(0), units.GetSquad(0)}}
 	newClient.Army = newA
 
 	//information about the game so that the client can download it if need be

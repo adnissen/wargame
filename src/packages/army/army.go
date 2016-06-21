@@ -1,9 +1,13 @@
 package army
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/adnissen/wargame/src/packages/units"
+)
 
 type Army struct {
-	Squads []int
+	Squads []units.Squad
 }
 
 func (a Army) ArmyInformation() []byte {

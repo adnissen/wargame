@@ -16,8 +16,8 @@ type Unit struct {
 type Squad struct {
 	Id          int
 	DisplayName string
-	Leader      int
-	Grunts      []int
+	Leader      Unit
+	Grunts      []Unit
 }
 
 type UnitAttributes struct {
@@ -45,8 +45,16 @@ func LoadUnits() {
 }
 
 func LoadSquads() {
-	SquadList[0] = Squad{Id: 0, DisplayName: "Bromuk's Defenders", Leader: 0, Grunts: []int{1, 1, 1}}
-	SquadList[1] = Squad{Id: 1, DisplayName: "Corath's Rangers", Leader: 2, Grunts: []int{3, 3}}
+	SquadList[0] = Squad{Id: 0, DisplayName: "Bromuk's Defenders", Leader: UnitList[0], Grunts: []Unit{UnitList[1], UnitList[1], UnitList[1]}}
+	SquadList[1] = Squad{Id: 1, DisplayName: "Corath's Rangers", Leader: UnitList[2], Grunts: []Unit{UnitList[3], UnitList[3]}}
+}
+
+func GetUnit(id int) Unit {
+	return UnitList[id]
+}
+
+func GetSquad(id int) Squad {
+	return SquadList[id]
 }
 
 func UnitInformation() []byte {
