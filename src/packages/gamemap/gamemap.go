@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 )
 
 type Tile struct {
@@ -40,4 +41,8 @@ func ImportMap(s string) Map {
 
 func GetMap() Map {
 	return MapList[0]
+}
+
+func (m *Map) DistanceBetweenTiles(x1 int, y1 int, x2 int, y2 int) int {
+	return int(math.Abs(float64(x1)-float64(x2)) + math.Abs(float64(y1)-float64(y2)))
 }
