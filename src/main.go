@@ -15,8 +15,10 @@ import (
 
 	"github.com/adnissen/wargame/src/packages/army"
 	"github.com/adnissen/wargame/src/packages/gameclient"
+	"github.com/adnissen/wargame/src/packages/gamemap"
 	"github.com/adnissen/wargame/src/packages/gamestat"
 	"github.com/adnissen/wargame/src/packages/units"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -110,6 +112,8 @@ func main() {
 	log.Println("Loaded Units")
 	units.LoadSquads()
 	log.Println("Loaded Squads")
+	gamemap.LoadMaps()
+	log.Println("Loaded Maps")
 
 	http.HandleFunc("/echo", echo)
 	http.HandleFunc("/", home)
