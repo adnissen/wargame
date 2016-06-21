@@ -11,6 +11,8 @@ type Unit struct {
 	Description string
 	Attributes  UnitAttributes
 	CardText    string
+	X           int
+	Y           int
 }
 
 type Squad struct {

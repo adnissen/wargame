@@ -1,10 +1,12 @@
 package gamestat
 
 import (
-	"fmt"
 	"reflect"
 
+	"strconv"
+
 	"github.com/adnissen/wargame/src/packages/army"
+	"github.com/adnissen/wargame/src/packages/dice"
 	"github.com/adnissen/wargame/src/packages/gameclient"
 	"github.com/adnissen/wargame/src/packages/gamemap"
 	"github.com/adnissen/wargame/src/packages/units"
@@ -12,18 +14,46 @@ import (
 )
 
 type GameStat struct {
-	Armies      []army.Army
-	Players     []*gameclient.GameClient
-	Uid         uuid.UUID
-	Status      string
-	CurrentTurn *gameclient.GameClient
-	Map         gamemap.Map
+	Armies           []army.Army
+	Players          []*gameclient.GameClient
+	Uid              uuid.UUID
+	Status           string
+	CurrentTurn      *gameclient.GameClient
+	Map              gamemap.Map
+	UnitActionCounts map[*units.Unit]int
 }
 
 func (g *GameStat) SendMessageToAllPlayers(mt string, m []byte) {
 	for k, _ := range g.Players {
 		g.Players[k].SendMessageOfType(mt, m)
 	}
+}
+
+func (g *GameStat) ResetActions() {
+	if g.UnitActionCounts == nil {
+		g.UnitActionCounts = make(map[*units.Unit]int)
+	}
+	for k, _ := range g.Armies {
+		for i, _ := range g.Armies[k].Squads {
+			for j, _ := range g.Armies[k].Squads[i].Grunts {
+				g.UnitActionCounts[&g.Armies[k].Squads[i].Grunts[j]] = 2
+			}
+			g.UnitActionCounts[&g.Armies[k].Squads[i].Leader] = 2
+		}
+	}
+}
+
+func (g *GameStat) GetUnitOnTile(x int, y int) *units.Unit {
+	for k, _ := range g.Armies {
+		for i, _ := range g.Armies[k].Squads {
+			for _, u := range g.Armies[k].Squads[i].Grunts {
+				if u.X == x && u.Y == y {
+					return &u
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func (g *GameStat) SetCurrentGameForAllPlayers() {
@@ -42,7 +72,19 @@ func (g *GameStat) EndGame() {
 }
 
 func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit) {
-	defender.Attributes.Hps -= attacker.Attributes.Dmg
+	if g.UnitActionCounts[attacker] > 0 {
+		if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= attacker.Attributes.Rng {
+			r := dice.Roll(20)
+			g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(attacker.Attributes.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
+			if (r + attacker.Attributes.Atk) > defender.Attributes.Def {
+				defender.Attributes.Hps -= attacker.Attributes.Dmg
+				if defender.Attributes.Hps <= 0 {
+					delete(g.UnitActionCounts, defender)
+				}
+			}
+			g.UnitActionCounts[attacker] -= 1
+		}
+	}
 }
 
 func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat {
@@ -54,9 +96,7 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gamemap.GetMap()}
 	gstat.SetCurrentGameForAllPlayers()
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
-	fmt.Println(gstat.Armies[0].Squads[0].Grunts[0].Attributes.Hps)
-	gstat.Attack(&gstat.Armies[1].Squads[0].Grunts[0], &gstat.Armies[0].Squads[0].Grunts[0])
-	fmt.Println(gstat.Armies[0].Squads[0].Grunts[0].Attributes.Hps)
+	gstat.ResetActions()
 
 	return &gstat
 }
