@@ -32,7 +32,7 @@ func (g *GameStat) SetCurrentGameForAllPlayers() {
 
 func (g *GameStat) EndGame() {
 	for k, _ := range g.Players {
-		if g.Players[k] != nil {
+		if g.Players[k].IsStillConnected() {
 			g.Players[k].ResetCurrentGame()
 		}
 	}

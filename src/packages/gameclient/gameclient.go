@@ -33,6 +33,10 @@ func (g *GameClient) CompareWebSocketConn(c *websocket.Conn) bool {
 	return c == g.wbs
 }
 
+func (g *GameClient) IsStillConnected() bool {
+	return g.wbs != nil
+}
+
 func (g *GameClient) SetCurrentGame(uid uuid.UUID) {
 	g.CurrentGame = uid
 }
