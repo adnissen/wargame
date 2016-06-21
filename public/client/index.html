@@ -94,7 +94,6 @@ window.addEventListener("load", function(evt) {
     var MapTile = function(x, y, key, params){
       this.sprite = game.add.sprite(x, y, key);
       this.overlay = game.add.sprite(x, y, 'blank');
-      this.id = params.id
       this.sprite.inputEnabled = true;
       this.walkable = false;
       this.spawn = false;
