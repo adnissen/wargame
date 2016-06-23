@@ -1,6 +1,7 @@
 package gamestat
 
 import (
+	"encoding/json"
 	"reflect"
 
 	"strconv"
@@ -62,6 +63,11 @@ func (g *GameStat) SetCurrentGameForAllPlayers() {
 	}
 }
 
+func (g *GameStat) GetMapJson() []byte {
+	j, _ := json.Marshal(g.Map)
+	return j
+}
+
 func (g *GameStat) EndGame() {
 	for k, _ := range g.Players {
 		if g.Players[k].IsStillConnected() {
@@ -93,9 +99,10 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 	}
 	pary := []*gameclient.GameClient{p1, p2}
 	aary := []army.Army{p1.Army, p2.Army}
-	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gamemap.GetMap()}
+	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gamemap.GetCustomMap()}
 	gstat.SetCurrentGameForAllPlayers()
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
+	gstat.SendMessageToAllPlayers("map_data", gstat.GetMapJson())
 	gstat.ResetActions()
 
 	return &gstat

@@ -6,6 +6,11 @@
       body {
           margin: 0;
       }
+      #game {
+        position: absolute;
+        top: 150px;
+        left: 0;
+      }
   </style>
 <script>
 window.addEventListener("load", function(evt) {
@@ -27,8 +32,7 @@ window.addEventListener("load", function(evt) {
         ws = new WebSocket("{{.}}");
         ws.onopen = function(evt) {
             print("OPEN");
-            var game = new Phaser.Game(1280, 720, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-            window.game = game;
+            createGame();
         }
         ws.onclose = function(evt) {
             print("CLOSE");
@@ -41,6 +45,10 @@ window.addEventListener("load", function(evt) {
             switch (message.MessageType) {
               case 'announce':
                 //alert(message.Message);
+                break;
+              case 'map_data':
+                clearMap();
+                loadMap(message);
                 break;
               default:
                 console.log("Message " + message + " recieved with no handler!")
@@ -56,8 +64,15 @@ window.addEventListener("load", function(evt) {
         if (!ws) {
             return false;
         }
+        switch (input.value) {
+          case 'new':
+            newMap();
+            break;
+          default:
+            break;
+        }
         print("SEND: " + input.value);
-        ws.send(input.value);
+        //ws.send(input.value);
         return false;
     };
 
@@ -69,10 +84,17 @@ window.addEventListener("load", function(evt) {
         return false;
     };
 
+    function createGame(){
+      var game = new Phaser.Game(1280, 720, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
+      //message = JSON.parse(message.Message);
+      //game.currentMapData = message.Map;
+      window.game = game;
+    }
+
     /* PHASER GAME CLIENT BEGINS HEREEEEEEE */
 
 
-    var tileArray;
+    var tileArray = [[]];
     var selectedTile = 1;
     var key1;
     var key2;
@@ -91,42 +113,68 @@ window.addEventListener("load", function(evt) {
       game.load.image('water1', 'public/client/assets/sprites/tiles/water1.png');
       game.load.image('castle1', 'public/client/assets/sprites/tiles/castle1.png');
       game.load.image('blank', 'public/client/assets/sprites/tiles/blank.png');
+      game.load.image('rock1', 'public/client/assets/sprites/tiles/rock1.png');
+
     }
 
     var MapTile = function(x, y, key, params){
-      this.sprite = game.add.sprite(x, y, key);
-      this.overlay = game.add.sprite(x, y, 'blank');
+      if (params) {
+        x = params.X * 32;
+        y = params.Y * 32;
+      }
+      if (!params) params = {};
+      this.key = params.Key || key;
+      this.sprite = game.add.sprite(x, y, this.key);
+      this.overlayKey = params.OverlayKey || 'blank';
+      this.overlay = game.add.sprite(x, y, params.OverlayKey);
       this.sprite.inputEnabled = true;
-      this.walkable = false;
-      this.spawn = false;
-      this.tileType = '';
-      this.castle = false;
-      this.capturable = false;
-      this.owner = 0;
-      this.x = x / 32;
-      this.y = y / 32;
+      this.walkable = params.Walkable || false;
+      this.spawn = params.Spawn || false;
+      this.spawnTeam = params.SpawnTeam || 0;
+      this.tileType = params.TileType || '';
+      this.castle = params.Castle || false;
+      this.capturable = params.Capturable || false;
+      this.owner = params.Owner || 0;
+      this.x = params.X || x / 32;
+      this.y = params.Y || y / 32;
+
+      var self = this;
+
+      var updateTexture = function(key, layer){
+        switch (layer) {
+          case 2:
+            self.overlay.loadTexture(key);
+            self.overlayKey = key;
+            break;
+          default:
+            self.sprite.loadTexture(key);
+            self.key = key;
+            break;
+        }
+
+      }
 
       this.sprite.events.onInputDown.add(function(){
         switch (selectedTile) {
           case 1:
-            this.sprite.loadTexture('grass1');
-            this.tileType = 'grass';
-            this.walkable = true;
+            updateTexture('grass1');
+            self.tileType = 'grass';
+            self.walkable = true;
             break;
           case 2:
-            this.sprite.loadTexture('water1');
-            this.tileType = 'water';
-            this.walkable = false;
+            updateTexture('water1');
+            self.tileType = 'water';
+            self.walkable = false;
             break;
           case 3:
-            this.overlay.loadTexture('castle1');
-            this.castle = true;
-            this.capturable = true;
+            updateTexture('castle1', 2);
+            self.castle = true;
+            self.capturable = true;
             break;
           case 4:
-            this.overlay.loadTexture('blank');
-            this.castle = false;
-            this.capturable = false;
+            updateTexture('blank', 2);
+            self.castle = false;
+            self.capturable = false;
             break;
           case 5:
             if (!this.spawnOverlay) {
@@ -141,6 +189,7 @@ window.addEventListener("load", function(evt) {
 
       }, this)
     }
+
 
     var updateSelectedTile = function(newVal){
       console.log(newVal.event.code)
@@ -174,15 +223,48 @@ window.addEventListener("load", function(evt) {
       for (var i = 0; i < w; i++) {
         tilesArray[i] = new Array(h);
         for (var k = 0; k < h; k++) {
-          tilesArray[i][k] = new MapTile(i * 32, k * 32, 'tile_outline_red');
+          tilesArray[i][k] = new MapTile(i * 32, k * 32, 'rock1');
         }
       }
       return tilesArray;
     }
 
-    function create() {
-      tileArray = createMapArray(30, 25);
+    function clearMap() {
+      //debugger;
+      var w = tileArray.length;
+      var h = tileArray[0].length;
+      for (var i = 0; i < w; i++) {
+        for (var k = 0; k < h; k++) {
+          if (tileArray[i][k]) {
+            tileArray[i][k].sprite.destroy();
+            if (tileArray[i][k].overlay) tileArray[i][k].overlay.destroy();
+          }
+        }
+      }
+      tileArray = [[]];
+    }
 
+    function loadMap(mapAry){
+      mapAry = JSON.parse(mapAry.Message).Map;
+      var w = mapAry.length;
+      var h = mapAry[0].length;
+      for (var i = 0; i < w; i++) {
+        for (var k = 0; k < h; k++) {
+          t = mapAry[i][k];
+          mapAry[i][k] = new MapTile(0, 0, '', t);
+        }
+      }
+      tileArray = mapAry;
+      //debugger;
+    }
+
+    function newMap() {
+      clearMap();
+      tileArray = createMapArray(30, 25);
+    }
+
+    function create() {
+      //tileArray = createMapArray(30, 25);
       key1 = game.input.keyboard.addKey(Phaser.Keyboard.ONE);
       key1.onDown.add(updateSelectedTile, this);
       key2 = game.input.keyboard.addKey(Phaser.Keyboard.TWO);
@@ -204,11 +286,14 @@ window.addEventListener("load", function(evt) {
 
     function exportMap(){
       var ret = {};
-      ret.map = tileArray;
-      for (var i = 0; i < ret.map.length; i++) {
-        for (var k = 0; k < ret.map[1].length; k++) {
+      ret.message = {};
+      ret.message.map = tileArray;
+      for (var i = 0; i < ret.message.map.length; i++) {
+        for (var k = 0; k < ret.message.map[1].length; k++) {
           var tileJson = {};
-          var tileObj = ret.map[i][k];
+          var tileObj = ret.message.map[i][k];
+          tileJson.key = tileObj.key;
+          tileJson.overlayKey = tileObj.overlayKey;
           tileJson.walkable = tileObj.walkable;
           tileJson.spawn = tileObj.spawn;
           tileJson.tileType = tileObj.tileType;
@@ -216,11 +301,13 @@ window.addEventListener("load", function(evt) {
           tileJson.capturable = tileObj.capturable;
           tileJson.x = tileObj.x;
           tileJson.y = tileObj.y;
-          ret.map[i][k] = tileJson;
-
+          ret.message.map[i][k] = tileJson;
         }
       }
-      console.log(JSON.stringify(ret));
+      //console.log(ret);
+      ret.message = JSON.stringify(ret.message);
+      ret.messageType = "map_export_data";
+      ws.send(JSON.stringify(ret));
     }
 
     function update() {
@@ -266,5 +353,8 @@ You can change the message and send multiple times.
 </td><td valign="top" width="50%">
 <div id="output"></div>
 </td></tr></table>
+<div id="game">
+
+</div>
 </body>
 </html>

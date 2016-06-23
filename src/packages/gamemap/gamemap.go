@@ -9,8 +9,11 @@ import (
 
 type Tile struct {
 	TileType   string
+	Key        string
+	OverlayKey string
 	Walkable   bool
 	Spawn      bool
+	SpawnTeam  int
 	Castle     bool
 	Capturable bool
 	Owner      int
@@ -22,7 +25,7 @@ type Map struct {
 	Map [][]Tile
 }
 
-var MapList = make([]Map, 1)
+var MapList = make([]Map, 100)
 
 func LoadMaps() {
 	tempMap, err := ioutil.ReadFile("src/maps/test1.json")
@@ -39,7 +42,19 @@ func ImportMap(s string) Map {
 	return res
 }
 
+func InsertMap(m Map) {
+	MapList[1] = m
+	fmt.Println("imported map, first tile is " + m.Map[0][0].TileType)
+}
+
 func GetMap() Map {
+	return MapList[0]
+}
+
+func GetCustomMap() Map {
+	if &MapList[1] != nil {
+		return MapList[1]
+	}
 	return MapList[0]
 }
 

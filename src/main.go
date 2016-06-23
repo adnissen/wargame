@@ -7,6 +7,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"html/template"
 	"io/ioutil"
@@ -27,6 +28,11 @@ var addr = flag.String("addr", "localhost:8080", "http service address")
 var upgrader = websocket.Upgrader{}               // use default options
 var clients = make([]*gameclient.GameClient, 100) // represents the max number of players this server will run
 var runningGames = make(map[string]*gamestat.GameStat)
+
+type ClientMessage struct {
+	MessageType string
+	Message     string
+}
 
 func sendMessageToAllClients(m []byte) {
 	for k, _ := range clients {
@@ -91,9 +97,16 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			removeConnFromClients(c)
 			break
 		}
-		log.Printf("game_logic: %s", message)
+		//log.Printf("game_logic: %s", message)
 		if string(message) == "game" {
 			newClient.SendMessage([]byte(newClient.CurrentGame.String()))
+		}
+
+		cm := ClientMessage{}
+		json.Unmarshal(message, &cm)
+
+		if cm.MessageType == "map_export_data" {
+			gamemap.InsertMap(gamemap.ImportMap(cm.Message))
 		}
 	}
 }
