@@ -126,7 +126,7 @@ window.addEventListener("load", function(evt) {
       this.key = params.Key || key;
       this.sprite = game.add.sprite(x, y, this.key);
       this.overlayKey = params.OverlayKey || 'blank';
-      this.overlay = game.add.sprite(x, y, params.OverlayKey);
+      this.overlay = game.add.sprite(x, y, this.overlayKey);
       this.sprite.inputEnabled = true;
       this.walkable = params.Walkable || false;
       this.spawn = params.Spawn || false;
