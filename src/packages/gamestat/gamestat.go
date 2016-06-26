@@ -2,6 +2,7 @@ package gamestat
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"strconv"
@@ -19,7 +20,7 @@ type GameStat struct {
 	Players          []*gameclient.GameClient
 	Uid              uuid.UUID
 	Status           string
-	CurrentTurn      *gameclient.GameClient
+	CurrentTurn      int
 	Map              gamemap.Map
 	UnitActionCounts map[*units.Unit]int
 }
@@ -45,16 +46,7 @@ func (g *GameStat) ResetActions() {
 }
 
 func (g *GameStat) GetUnitOnTile(x int, y int) *units.Unit {
-	for k, _ := range g.Armies {
-		for i, _ := range g.Armies[k].Squads {
-			for _, u := range g.Armies[k].Squads[i].Grunts {
-				if u.X == x && u.Y == y {
-					return &u
-				}
-			}
-		}
-	}
-	return nil
+	return g.Map.Map[x][y].Unit
 }
 
 func (g *GameStat) SetCurrentGameForAllPlayers() {
@@ -65,6 +57,11 @@ func (g *GameStat) SetCurrentGameForAllPlayers() {
 
 func (g *GameStat) GetMapJson() []byte {
 	j, _ := json.Marshal(g.Map)
+	return j
+}
+
+func (g *GameStat) GetUnitJson() []byte {
+	j, _ := json.Marshal(g.Armies)
 	return j
 }
 
@@ -88,7 +85,35 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit) {
 					delete(g.UnitActionCounts, defender)
 				}
 			}
-			g.UnitActionCounts[attacker] -= 1
+			//attacking is the last thing you can do
+			g.UnitActionCounts[attacker] = 0
+		}
+	}
+}
+
+func (g *GameStat) SpawnAllUnits() {
+	for team := range g.Armies {
+		fmt.Print("Army team: ")
+		fmt.Print(team)
+		fmt.Print("\n")
+		fmt.Println("==============")
+		for s := range g.Armies[team].Squads {
+			for k := range g.Armies[team].Squads[s].Grunts {
+				//needs to be a pointer to this array? makes changes to this array but loop still uses old copy
+				grunt := &g.Armies[team].Squads[s].Grunts[k]
+				g.Map.SpawnUnitOnFirstAvailable(grunt, team)
+				if grunt.Spawned {
+					fmt.Print("spawned unit at ")
+					fmt.Print(grunt.X)
+					fmt.Print(" ")
+					fmt.Print(grunt.Y)
+					fmt.Print("\n")
+					//fmt.Println(grunt == &g.Armies[team].Squads[s].Grunts[k])
+					//fmt.Println(grunt == g.GetUnitOnTile(grunt.X, grunt.Y))
+					//fmt.Println(grunt.X == g.GetUnitOnTile(grunt.X, grunt.Y).X && grunt.Y == g.GetUnitOnTile(grunt.X, grunt.Y).Y)
+				}
+			}
+			g.Map.SpawnUnitOnFirstAvailable(&g.Armies[team].Squads[s].Leader, team)
 		}
 	}
 }
@@ -103,6 +128,13 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 	gstat.SetCurrentGameForAllPlayers()
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
 	gstat.SendMessageToAllPlayers("map_data", gstat.GetMapJson())
+	fmt.Println("BEFOReTHIGN")
+	fmt.Println(&gstat.Armies[0].Squads[0].Grunts[0] == &gstat.Armies[0].Squads[1].Grunts[0])
+	gstat.SpawnAllUnits()
+	fmt.Println("THIGN")
+	fmt.Println(&gstat.Armies[0].Squads[0] == &gstat.Armies[0].Squads[1])
+	fmt.Println(&gstat.Armies[0].Squads[0].Grunts[0] == &gstat.Armies[0].Squads[1].Grunts[0])
+	gstat.SendMessageToAllPlayers("game_start_army_data", gstat.GetUnitJson())
 	gstat.ResetActions()
 
 	return &gstat

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+
+	"github.com/adnissen/wargame/src/packages/units"
 )
 
 type Tile struct {
@@ -19,6 +21,7 @@ type Tile struct {
 	Owner      int
 	X          int
 	Y          int
+	Unit       *units.Unit
 }
 
 type Map struct {
@@ -44,7 +47,37 @@ func ImportMap(s string) Map {
 
 func InsertMap(m Map) {
 	MapList[1] = m
-	fmt.Println("imported map, first tile is " + m.Map[0][0].TileType)
+	fmt.Println("imported map!")
+}
+
+func (m *Map) SpawnUnitOnFirstAvailable(u *units.Unit, team int) {
+	for k := range m.Map {
+		for i := range m.Map[k] {
+			//just find the first spawn points and put the units in them
+			if !m.Map[k][i].Spawn {
+				continue
+			}
+			if m.Map[k][i].SpawnTeam != team {
+				continue
+			}
+			if !m.Map[k][i].Walkable {
+				continue
+			}
+			if m.Map[k][i].Unit != nil {
+				fmt.Print("skipping ")
+				fmt.Print(k)
+				fmt.Print(" ")
+				fmt.Print(i)
+				fmt.Print(" occuppied\n")
+				continue
+			}
+
+			u.Spawned = true
+			u.SetPos(m.Map[k][i].X, m.Map[k][i].Y)
+			m.Map[k][i].Unit = u
+			return
+		}
+	}
 }
 
 func GetMap() Map {

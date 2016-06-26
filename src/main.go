@@ -9,6 +9,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -70,7 +71,19 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	log.Printf("client connected %s", r.RemoteAddr)
 	newClient := insertConnIntoClients(c)
-	newA := army.Army{Squads: []units.Squad{units.GetSquad(0), units.GetSquad(0), units.GetSquad(0)}}
+
+	newA := army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(0), units.CreateSquad(0)}}
+	for k := range newA.Squads {
+		for u := range newA.Squads[k].Grunts {
+			fmt.Println(newA.Squads[k].Grunts[u].Uid)
+		}
+	}
+	fmt.Println("JOIN")
+	fmt.Println(&newA.Squads[0].Grunts[0] == &newA.Squads[1].Grunts[0])
+	fmt.Println(newA.Squads[0].Grunts[0] == newA.Squads[1].Grunts[0])
+	newA.Squads[0].Grunts[0].Key = "ldkajfladj"
+	fmt.Println(newA.Squads[0].Grunts[0] == newA.Squads[1].Grunts[0])
+
 	newClient.Army = newA
 
 	//information about the game so that the client can download it if need be

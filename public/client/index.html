@@ -50,6 +50,9 @@ window.addEventListener("load", function(evt) {
                 clearMap();
                 loadMap(message);
                 break;
+              case 'game_start_army_data':
+                console.log(JSON.parse(message.Message));
+                break;
               default:
                 console.log("Message " + message + " recieved with no handler!")
             }
@@ -117,6 +120,22 @@ window.addEventListener("load", function(evt) {
 
     }
 
+    var Unit = function(x, y, key, params){
+      if (params) {
+        x = params.X * 32;
+        y = params.Y * 32;
+      }
+      if (!params) params = {};
+      this.key = params.Key || key;
+      this.sprite = game.add.sprite(x, y, this.key);
+      this.sprite.inputEnabled = true;
+      this.owner = params.Owner || 0;
+      this.x = x / 32;
+      this.y = y / 32;
+
+      var self = this;
+    }
+
     var MapTile = function(x, y, key, params){
       if (params) {
         x = params.X * 32;
@@ -135,8 +154,8 @@ window.addEventListener("load", function(evt) {
       this.castle = params.Castle || false;
       this.capturable = params.Capturable || false;
       this.owner = params.Owner || 0;
-      this.x = params.X || x / 32;
-      this.y = params.Y || y / 32;
+      this.x = x / 32;
+      this.y = y / 32;
 
       var self = this;
 
@@ -177,9 +196,15 @@ window.addEventListener("load", function(evt) {
             self.capturable = false;
             break;
           case 5:
-            if (!this.spawnOverlay) {
-              this.spawnOverlay(x, y, "tile_outline_red");
-            }
+            updateTexture('tile_outline_red', 2);
+            self.spawnTeam = 0;
+            self.spawn = true;
+            break;
+          case 6:
+            updateTexture('tile_outline_blue', 2);
+            self.spawnTeam = 1;
+            self.spawn = true;
+            break;
           default:
             break;
         }
@@ -207,14 +232,16 @@ window.addEventListener("load", function(evt) {
         case 'Digit4':
           selectedTile = 4;
           break;
-        case 'Q':
+        case 'KeyQ':
           if (selectedTile == 5) selectedTile = 6;
-          else if (selectedTile == 6) selectedTile = 7;
+          else if (selectedTile == 6) selectedTile = 5;
           else selectedTile = 5;
           break;
         default:
           selectedTile = 1;
       }
+
+      print(selectedTile);
 
     }
 
@@ -278,7 +305,7 @@ window.addEventListener("load", function(evt) {
       keyE.onDown.add(exportMap, this);
 
       keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
-      keyE.onDown.add(updateSelectedTile, this);
+      keyQ.onDown.add(updateSelectedTile, this);
 
       game.world.scale.set(1);
       game.camera.bounds = undefined;
@@ -296,11 +323,13 @@ window.addEventListener("load", function(evt) {
           tileJson.overlayKey = tileObj.overlayKey;
           tileJson.walkable = tileObj.walkable;
           tileJson.spawn = tileObj.spawn;
+          tileJson.spawnTeam = tileObj.spawnTeam;
           tileJson.tileType = tileObj.tileType;
           tileJson.castle = tileObj.castle;
           tileJson.capturable = tileObj.capturable;
           tileJson.x = tileObj.x;
           tileJson.y = tileObj.y;
+          print(tileJson.x + " " + tileJson.y)
           ret.message.map[i][k] = tileJson;
         }
       }
@@ -347,7 +376,7 @@ You can change the message and send multiple times.
 <form>
 <button id="open">Open</button>
 <button id="close">Close</button>
-<p><input id="input" type="text" value="Hello world!">
+<p><input id="input" type="text" value="new">
 <button id="send">Send</button>
 </form>
 </td><td valign="top" width="50%">
