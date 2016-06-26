@@ -64,11 +64,6 @@ func (m *Map) SpawnUnitOnFirstAvailable(u *units.Unit, team int) {
 				continue
 			}
 			if m.Map[k][i].Unit != nil {
-				fmt.Print("skipping ")
-				fmt.Print(k)
-				fmt.Print(" ")
-				fmt.Print(i)
-				fmt.Print(" occuppied\n")
 				continue
 			}
 

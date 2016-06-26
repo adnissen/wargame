@@ -49,6 +49,10 @@ func (g *GameStat) GetUnitOnTile(x int, y int) *units.Unit {
 	return g.Map.Map[x][y].Unit
 }
 
+func (g *GameStat) GetTile(x int, y int) *gamemap.Tile {
+	return &g.Map.Map[x][y]
+}
+
 func (g *GameStat) SetCurrentGameForAllPlayers() {
 	for k, _ := range g.Players {
 		g.Players[k].SetCurrentGame(g.Uid)
@@ -102,16 +106,6 @@ func (g *GameStat) SpawnAllUnits() {
 				//needs to be a pointer to this array? makes changes to this array but loop still uses old copy
 				grunt := &g.Armies[team].Squads[s].Grunts[k]
 				g.Map.SpawnUnitOnFirstAvailable(grunt, team)
-				if grunt.Spawned {
-					fmt.Print("spawned unit at ")
-					fmt.Print(grunt.X)
-					fmt.Print(" ")
-					fmt.Print(grunt.Y)
-					fmt.Print("\n")
-					//fmt.Println(grunt == &g.Armies[team].Squads[s].Grunts[k])
-					//fmt.Println(grunt == g.GetUnitOnTile(grunt.X, grunt.Y))
-					//fmt.Println(grunt.X == g.GetUnitOnTile(grunt.X, grunt.Y).X && grunt.Y == g.GetUnitOnTile(grunt.X, grunt.Y).Y)
-				}
 			}
 			g.Map.SpawnUnitOnFirstAvailable(&g.Armies[team].Squads[s].Leader, team)
 		}
@@ -128,12 +122,7 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 	gstat.SetCurrentGameForAllPlayers()
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
 	gstat.SendMessageToAllPlayers("map_data", gstat.GetMapJson())
-	fmt.Println("BEFOReTHIGN")
-	fmt.Println(&gstat.Armies[0].Squads[0].Grunts[0] == &gstat.Armies[0].Squads[1].Grunts[0])
 	gstat.SpawnAllUnits()
-	fmt.Println("THIGN")
-	fmt.Println(&gstat.Armies[0].Squads[0] == &gstat.Armies[0].Squads[1])
-	fmt.Println(&gstat.Armies[0].Squads[0].Grunts[0] == &gstat.Armies[0].Squads[1].Grunts[0])
 	gstat.SendMessageToAllPlayers("game_start_army_data", gstat.GetUnitJson())
 	gstat.ResetActions()
 
