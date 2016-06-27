@@ -51,7 +51,9 @@ window.addEventListener("load", function(evt) {
                 loadMap(message);
                 break;
               case 'game_start_army_data':
-                console.log(JSON.parse(message.Message));
+                var m = JSON.parse(message.Message);
+                console.log(m);
+                loadUnits(m);
                 break;
               default:
                 console.log("Message " + message + " recieved with no handler!")
@@ -98,6 +100,7 @@ window.addEventListener("load", function(evt) {
 
 
     var tileArray = [[]];
+    var unitHash = {};
     var selectedTile = 1;
     var key1;
     var key2;
@@ -117,6 +120,7 @@ window.addEventListener("load", function(evt) {
       game.load.image('castle1', 'public/client/assets/sprites/tiles/castle1.png');
       game.load.image('blank', 'public/client/assets/sprites/tiles/blank.png');
       game.load.image('rock1', 'public/client/assets/sprites/tiles/rock1.png');
+      game.load.image('bow_icon', 'public/client/assets/sprites/units/bow-icon.png', 32, 32);
 
     }
 
@@ -134,6 +138,21 @@ window.addEventListener("load", function(evt) {
       this.y = y / 32;
 
       var self = this;
+    }
+
+    var loadUnits = function(ary){
+      for (var i = 0; i < ary.length; i++){
+        for (var k = 0; k < ary[i].Squads.length; k++){
+          for (var l = 0; l < ary[i].Squads[k].Grunts.length; l++) {
+            var u = ary[i].Squads[k].Grunts[l];
+            UnitList[u.Uid] = new Unit(u.X * 32, u.Y * 32, 'bow_icon');
+          }
+          if (ary[i].Squads[k].Leader) {
+            var u = ary[i].Squads[k].Leader;
+            UnitList[u.Uid] = new Unit(u.X * 32, u.Y * 32, 'bow_icon');
+          }
+        }
+      }
     }
 
     var MapTile = function(x, y, key, params){
