@@ -95,6 +95,25 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit) {
 	}
 }
 
+func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) {
+	for _, m := range moves {
+		if m[0] == unit.X && m[1] == unit.Y {
+			continue
+		}
+		ct := g.GetTile(unit.X, unit.Y)
+		nt := g.GetTile(m[0], m[0])
+		if nt.IsOpen() == false {
+			return
+		}
+		if gamemap.DistanceBetweenTiles(ct.X, ct.Y, nt.X, nt.Y) > 1 {
+			return
+		}
+		unit.SetPos(nt.X, nt.Y)
+		nt.Unit = unit
+		ct.Unit = nil
+	}
+}
+
 func (g *GameStat) SpawnAllUnits() {
 	for team := range g.Armies {
 		fmt.Print("Army team: ")

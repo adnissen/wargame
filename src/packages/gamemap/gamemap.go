@@ -50,6 +50,10 @@ func InsertMap(m Map) {
 	fmt.Println("imported map!")
 }
 
+func (t *Tile) IsOpen() bool {
+	return t.Walkable && t.Unit == nil
+}
+
 func (m *Map) SpawnUnitOnFirstAvailable(u *units.Unit, team int) {
 	for k := range m.Map {
 		for i := range m.Map[k] {
