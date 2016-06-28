@@ -102,6 +102,7 @@ window.addEventListener("load", function(evt) {
     var tileArray = [[]];
     var unitHash = {};
     var selectedTile = 1;
+    var TILESIZE = 48;
     var key1;
     var key2;
     var key3;
@@ -120,22 +121,22 @@ window.addEventListener("load", function(evt) {
       game.load.image('castle1', 'public/client/assets/sprites/tiles/castle1.png');
       game.load.image('blank', 'public/client/assets/sprites/tiles/blank.png');
       game.load.image('rock1', 'public/client/assets/sprites/tiles/rock1.png');
-      game.load.image('bow_icon', 'public/client/assets/sprites/units/bow-icon.png', 32, 32);
+      game.load.image('bow_icon', 'public/client/assets/sprites/units/bow-icon.png');
 
     }
 
     var Unit = function(x, y, key, params){
       if (params) {
-        x = params.X * 32;
-        y = params.Y * 32;
+        x = params.X * TILESIZE;
+        y = params.Y * TILESIZE;
       }
       if (!params) params = {};
       this.key = params.Key || key;
       this.sprite = game.add.sprite(x, y, this.key);
       this.sprite.inputEnabled = true;
       this.owner = params.Owner || 0;
-      this.x = x / 32;
-      this.y = y / 32;
+      this.x = x / TILESIZE;
+      this.y = y / TILESIZE;
 
       var self = this;
     }
@@ -145,11 +146,11 @@ window.addEventListener("load", function(evt) {
         for (var k = 0; k < ary[i].Squads.length; k++){
           for (var l = 0; l < ary[i].Squads[k].Grunts.length; l++) {
             var u = ary[i].Squads[k].Grunts[l];
-            UnitList[u.Uid] = new Unit(u.X * 32, u.Y * 32, 'bow_icon');
+            UnitList[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'bow_icon');
           }
           if (ary[i].Squads[k].Leader) {
             var u = ary[i].Squads[k].Leader;
-            UnitList[u.Uid] = new Unit(u.X * 32, u.Y * 32, 'bow_icon');
+            UnitList[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'bow_icon');
           }
         }
       }
@@ -157,8 +158,8 @@ window.addEventListener("load", function(evt) {
 
     var MapTile = function(x, y, key, params){
       if (params) {
-        x = params.X * 32;
-        y = params.Y * 32;
+        x = params.X * TILESIZE;
+        y = params.Y * TILESIZE;
       }
       if (!params) params = {};
       this.key = params.Key || key;
@@ -173,8 +174,8 @@ window.addEventListener("load", function(evt) {
       this.castle = params.Castle || false;
       this.capturable = params.Capturable || false;
       this.owner = params.Owner || 0;
-      this.x = x / 32;
-      this.y = y / 32;
+      this.x = x / TILESIZE;
+      this.y = y / TILESIZE;
 
       var self = this;
 
@@ -269,7 +270,7 @@ window.addEventListener("load", function(evt) {
       for (var i = 0; i < w; i++) {
         tilesArray[i] = new Array(h);
         for (var k = 0; k < h; k++) {
-          tilesArray[i][k] = new MapTile(i * 32, k * 32, 'rock1');
+          tilesArray[i][k] = new MapTile(i * TILESIZE, k * TILESIZE, 'rock1');
         }
       }
       return tilesArray;
@@ -369,16 +370,16 @@ window.addEventListener("load", function(evt) {
       }
 
       if (game.input.keyboard.isDown(Phaser.Keyboard.W)){
-        game.camera.y -= 2;
+        game.camera.y -= 5;
       }
       if (game.input.keyboard.isDown(Phaser.Keyboard.A)){
-        game.camera.x -= 2;
+        game.camera.x -= 5;
       }
       if (game.input.keyboard.isDown(Phaser.Keyboard.S)){
-        game.camera.y += 2;
+        game.camera.y += 5;
       }
       if (game.input.keyboard.isDown(Phaser.Keyboard.D)){
-        game.camera.x += 2;
+        game.camera.x += 5;
       }
     }
 

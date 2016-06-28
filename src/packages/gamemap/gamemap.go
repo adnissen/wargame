@@ -28,7 +28,7 @@ type Map struct {
 	Map [][]Tile
 }
 
-var MapList = make([]Map, 100)
+var MapList = make(map[string]Map, 100)
 
 func LoadMaps() {
 	tempMap, err := ioutil.ReadFile("src/maps/test1.json")
@@ -36,7 +36,7 @@ func LoadMaps() {
 		fmt.Println(err)
 	}
 	ts := string(tempMap)
-	MapList[0] = ImportMap(ts)
+	MapList["default"] = ImportMap(ts)
 }
 
 func ImportMap(s string) Map {
@@ -46,8 +46,15 @@ func ImportMap(s string) Map {
 }
 
 func InsertMap(m Map) {
-	MapList[1] = m
+	MapList["save"] = m
 	fmt.Println("imported map!")
+}
+
+func SaveMap(s string) {
+	err := ioutil.WriteFile("src/maps/test1.json", []byte(s), 0644)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func (t *Tile) IsOpen() bool {
@@ -80,14 +87,15 @@ func (m *Map) SpawnUnitOnFirstAvailable(u *units.Unit, team int) {
 }
 
 func GetMap() Map {
-	return MapList[0]
+	return MapList["default"]
 }
 
 func GetCustomMap() Map {
-	if &MapList[1] != nil {
-		return MapList[1]
+	_, d := MapList["save"]
+	if d {
+		return MapList["save"]
 	}
-	return MapList[0]
+	return MapList["default"]
 }
 
 func DistanceBetweenTiles(x1 int, y1 int, x2 int, y2 int) int {
