@@ -47,6 +47,11 @@ window.addEventListener("load", function(evt) {
             console.log(JSON.parse(evt.data));
             var message = JSON.parse(evt.data);
             switch (message.MessageType) {
+              case 'team':
+                myTeam = parseInt(message.Message)
+                console.log(message);
+                console.log('got team message, on team ' + myTeam)
+                break;
               case 'announce':
                 //alert(message.Message);
                 break;
@@ -116,6 +121,7 @@ window.addEventListener("load", function(evt) {
     var keyE;
     var mouseDown = false;
     var inGame = false;
+    var myTeam = null;
 
     function preload() {
       //
@@ -139,6 +145,7 @@ window.addEventListener("load", function(evt) {
       if (!params) params = {};
       if (params.team == 0) this.color = "red";
       else this.color = "blue";
+      this.team = params.team;
       this.key = key + "_" + this.color;
       this.sprite = game.add.sprite(x, y, this.key);
       this.sprite.inputEnabled = true;
@@ -153,7 +160,10 @@ window.addEventListener("load", function(evt) {
 
       this.sprite.events.onInputDown.add(function(){
         clr();
-        print("unit: " + self.uid);
+        if (myTeam == self.team)
+          print("friendly unit: " + self.uid);
+        else
+          print("enemy unit: " + self.uid);
         print("team: " + self.color)
         print("attributes: " + JSON.stringify(self.attributes))
       })

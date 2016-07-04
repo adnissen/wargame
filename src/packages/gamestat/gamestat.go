@@ -56,6 +56,7 @@ func (g *GameStat) GetTile(x int, y int) *gamemap.Tile {
 func (g *GameStat) SetCurrentGameForAllPlayers() {
 	for k, _ := range g.Players {
 		g.Players[k].SetCurrentGame(g.Uid)
+		g.Players[k].SendMessageOfType("team", []byte(strconv.Itoa(k)))
 	}
 }
 
@@ -153,8 +154,8 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 	pary := []*gameclient.GameClient{p1, p2}
 	aary := []army.Army{p1.Army, p2.Army}
 	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gamemap.GetCustomMap()}
-	gstat.SetCurrentGameForAllPlayers()
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
+	gstat.SetCurrentGameForAllPlayers()
 	gstat.SendMessageToAllPlayers("map_data", gstat.GetMapJson())
 	gstat.SpawnAllUnits()
 	gstat.SendMessageToAllPlayers("game_start_army_data", gstat.GetUnitJson())
