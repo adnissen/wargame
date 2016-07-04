@@ -40,6 +40,7 @@ func LoadMaps() {
 }
 
 func ImportMap(s string) Map {
+	SaveMap(s)
 	res := Map{}
 	json.Unmarshal([]byte(s), &res)
 	return res
@@ -55,6 +56,7 @@ func SaveMap(s string) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Println("saved map!")
 }
 
 func (t *Tile) IsOpen() bool {

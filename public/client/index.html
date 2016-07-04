@@ -48,6 +48,7 @@ window.addEventListener("load", function(evt) {
                 break;
               case 'map_data':
                 clearMap();
+                inGame = true;
                 loadMap(message);
                 break;
               case 'game_start_army_data':
@@ -110,6 +111,7 @@ window.addEventListener("load", function(evt) {
     var keyQ;
     var keyE;
     var mouseDown = false;
+    var inGame = false;
 
     function preload() {
       //
@@ -121,7 +123,7 @@ window.addEventListener("load", function(evt) {
       game.load.image('castle1', 'public/client/assets/sprites/tiles/castle1.png');
       game.load.image('blank', 'public/client/assets/sprites/tiles/blank.png');
       game.load.image('rock1', 'public/client/assets/sprites/tiles/rock1.png');
-      game.load.image('bow_icon', 'public/client/assets/sprites/units/bow-icon.png');
+      game.load.image('bow_icon', 'public/client/assets/sprites/units/archerguy.png');
 
     }
 
@@ -146,11 +148,11 @@ window.addEventListener("load", function(evt) {
         for (var k = 0; k < ary[i].Squads.length; k++){
           for (var l = 0; l < ary[i].Squads[k].Grunts.length; l++) {
             var u = ary[i].Squads[k].Grunts[l];
-            UnitList[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'bow_icon');
+            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'bow_icon');
           }
           if (ary[i].Squads[k].Leader) {
             var u = ary[i].Squads[k].Leader;
-            UnitList[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'bow_icon');
+            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'bow_icon');
           }
         }
       }
@@ -165,7 +167,12 @@ window.addEventListener("load", function(evt) {
       this.key = params.Key || key;
       this.sprite = game.add.sprite(x, y, this.key);
       this.overlayKey = params.OverlayKey || 'blank';
-      this.overlay = game.add.sprite(x, y, this.overlayKey);
+
+      if (inGame && this.overlayKey != 'tile_outline_red' && this.overlayKey != 'tile_outline_blue'){
+        this.overlay = game.add.sprite(x, y, this.overlayKey);
+      } else if (!inGame){
+        this.overlay = game.add.sprite(x, y, this.overlayKey);
+      }
       this.sprite.inputEnabled = true;
       this.walkable = params.Walkable || false;
       this.spawn = params.Spawn || false;
@@ -194,39 +201,41 @@ window.addEventListener("load", function(evt) {
       }
 
       this.sprite.events.onInputDown.add(function(){
-        switch (selectedTile) {
-          case 1:
-            updateTexture('grass1');
-            self.tileType = 'grass';
-            self.walkable = true;
-            break;
-          case 2:
-            updateTexture('water1');
-            self.tileType = 'water';
-            self.walkable = false;
-            break;
-          case 3:
-            updateTexture('castle1', 2);
-            self.castle = true;
-            self.capturable = true;
-            break;
-          case 4:
-            updateTexture('blank', 2);
-            self.castle = false;
-            self.capturable = false;
-            break;
-          case 5:
-            updateTexture('tile_outline_red', 2);
-            self.spawnTeam = 0;
-            self.spawn = true;
-            break;
-          case 6:
-            updateTexture('tile_outline_blue', 2);
-            self.spawnTeam = 1;
-            self.spawn = true;
-            break;
-          default:
-            break;
+        if (!inGame) {
+          switch (selectedTile) {
+            case 1:
+              updateTexture('grass1');
+              self.tileType = 'grass';
+              self.walkable = true;
+              break;
+            case 2:
+              updateTexture('water1');
+              self.tileType = 'water';
+              self.walkable = false;
+              break;
+            case 3:
+              updateTexture('castle1', 2);
+              self.castle = true;
+              self.capturable = true;
+              break;
+            case 4:
+              updateTexture('blank', 2);
+              self.castle = false;
+              self.capturable = false;
+              break;
+            case 5:
+              updateTexture('tile_outline_red', 2);
+              self.spawnTeam = 0;
+              self.spawn = true;
+              break;
+            case 6:
+              updateTexture('tile_outline_blue', 2);
+              self.spawnTeam = 1;
+              self.spawn = true;
+              break;
+            default:
+              break;
+          }
         }
       }, this);
 

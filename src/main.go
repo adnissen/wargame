@@ -72,6 +72,15 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	log.Printf("client connected %s", r.RemoteAddr)
 	newClient := insertConnIntoClients(c)
 
+	/*
+		  typeof("aimee") string
+			var a = "aimee"
+			b = &a
+			typeof(b) *string
+
+			reverse(a)
+	*/
+
 	newA := army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(0), units.CreateSquad(0)}}
 	for k := range newA.Squads {
 		for u := range newA.Squads[k].Grunts {
