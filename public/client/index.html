@@ -49,6 +49,8 @@ window.addEventListener("load", function(evt) {
             switch (message.MessageType) {
               case 'team':
                 myTeam = parseInt(message.Message)
+                if (myTeam == 0) myColor = "red";
+                else myColor = "blue";
                 console.log(message);
                 console.log('got team message, on team ' + myTeam)
                 break;
@@ -64,6 +66,7 @@ window.addEventListener("load", function(evt) {
                 var m = JSON.parse(message.Message);
                 console.log(m);
                 loadUnits(m);
+                cursor = game.add.sprite(0, 0, 'tile_outline_' + myColor);
                 break;
               default:
                 console.log("Message " + message + " recieved with no handler!")
@@ -122,6 +125,8 @@ window.addEventListener("load", function(evt) {
     var mouseDown = false;
     var inGame = false;
     var myTeam = null;
+    var myColor = null;
+    var cursor = null;
 
     function preload() {
       //
@@ -166,7 +171,14 @@ window.addEventListener("load", function(evt) {
           print("enemy unit: " + self.uid);
         print("team: " + self.color)
         print("attributes: " + JSON.stringify(self.attributes))
+      });
+
+
+      this.sprite.events.onInputDown.add(function(){
+        cursor.x = self.x * TILESIZE;
+        cursor.y = self.y * TILESIZE;
       })
+
     }
 
     var loadUnits = function(ary){
