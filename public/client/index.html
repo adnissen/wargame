@@ -25,6 +25,10 @@ window.addEventListener("load", function(evt) {
         output.appendChild(d);
     };
 
+    var clr = function() {
+        output.innerHTML = '';
+    };
+
     document.getElementById("open").onclick = function(evt) {
         if (ws) {
             return false;
@@ -123,8 +127,8 @@ window.addEventListener("load", function(evt) {
       game.load.image('castle1', 'public/client/assets/sprites/tiles/castle1.png');
       game.load.image('blank', 'public/client/assets/sprites/tiles/blank.png');
       game.load.image('rock1', 'public/client/assets/sprites/tiles/rock1.png');
-      game.load.image('bow_icon', 'public/client/assets/sprites/units/archerguy.png');
-
+      game.load.image('archerguy_red', 'public/client/assets/sprites/units/archerguy_red.png');
+      game.load.image('archerguy_blue', 'public/client/assets/sprites/units/archerguy_blue.png');
     }
 
     var Unit = function(x, y, key, params){
@@ -133,14 +137,26 @@ window.addEventListener("load", function(evt) {
         y = params.Y * TILESIZE;
       }
       if (!params) params = {};
-      this.key = params.Key || key;
+      if (params.team == 0) this.color = "red";
+      else this.color = "blue";
+      this.key = key + "_" + this.color;
       this.sprite = game.add.sprite(x, y, this.key);
       this.sprite.inputEnabled = true;
       this.owner = params.Owner || 0;
       this.x = x / TILESIZE;
       this.y = y / TILESIZE;
 
+      this.uid = params.Uid;
+      this.attributes = params.Attributes;
+
       var self = this;
+
+      this.sprite.events.onInputDown.add(function(){
+        clr();
+        print("unit: " + self.uid);
+        print("team: " + self.color)
+        print("attributes: " + JSON.stringify(self.attributes))
+      })
     }
 
     var loadUnits = function(ary){
@@ -148,11 +164,13 @@ window.addEventListener("load", function(evt) {
         for (var k = 0; k < ary[i].Squads.length; k++){
           for (var l = 0; l < ary[i].Squads[k].Grunts.length; l++) {
             var u = ary[i].Squads[k].Grunts[l];
-            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'bow_icon');
+            u.team = i;
+            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'archerguy', u);
           }
           if (ary[i].Squads[k].Leader) {
             var u = ary[i].Squads[k].Leader;
-            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'bow_icon');
+            u.team = i;
+            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'archerguy', u);
           }
         }
       }
@@ -238,10 +256,6 @@ window.addEventListener("load", function(evt) {
           }
         }
       }, this);
-
-      this.sprite.events.onInputOver.add(function(){
-
-      }, this)
     }
 
 
