@@ -80,6 +80,7 @@ func (m *Map) SpawnUnitOnFirstAvailable(u *units.Unit, team int) {
 				continue
 			}
 
+			u.Team = team
 			u.Spawned = true
 			u.SetPos(m.Map[k][i].X, m.Map[k][i].Y)
 			m.Map[k][i].Unit = u

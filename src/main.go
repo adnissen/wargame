@@ -87,11 +87,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(newA.Squads[k].Grunts[u].Uid)
 		}
 	}
-	fmt.Println("JOIN")
-	fmt.Println(&newA.Squads[0].Grunts[0] == &newA.Squads[1].Grunts[0])
-	fmt.Println(newA.Squads[0].Grunts[0] == newA.Squads[1].Grunts[0])
-	newA.Squads[0].Grunts[0].Key = "ldkajfladj"
-	fmt.Println(newA.Squads[0].Grunts[0] == newA.Squads[1].Grunts[0])
 
 	newClient.Army = newA
 
@@ -125,7 +120,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if string(message) == "end_turn" {
-			if &newClient.CurrentGame != nil {
+			if newClient.CurrentGame.String() != "00000000-0000-0000-0000-000000000000" {
 				runningGames[newClient.CurrentGame.String()].EndTurn(newClient)
 			}
 		}
@@ -153,6 +148,8 @@ func main() {
 	log.Println("Loaded Units")
 	units.LoadSquads()
 	log.Println("Loaded Squads")
+	units.LoadWeapons()
+	log.Println("Loaded Weapons")
 	gamemap.LoadMaps()
 	log.Println("Loaded Maps")
 

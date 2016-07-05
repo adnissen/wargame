@@ -18,6 +18,7 @@ type Unit struct {
 	X           int
 	Y           int
 	Spawned     bool
+	Team        int
 }
 
 type Squad struct {
@@ -32,30 +33,50 @@ type Squad struct {
 }
 
 type UnitAttributes struct {
-	Atk int
-	Def int
-	Amr int
-	Spd int
-	Hps int
-	Rng int
-	Dmg int
+	Def       int
+	Amr       int
+	Spd       int
+	Hps       int
+	WeaponIds []int
+	Weapons   []Weapon
+}
+
+type Weapon struct {
+	Id            int
+	Uid           uuid.UUID
+	DisplayName   string
+	Key           string
+	Atk           int
+	Rng           int
+	Dmg           int
+	Uses          int
+	UsesRemaining int
+	NoAttack      bool
+	Ability       bool
+	AbilityName   string
 }
 
 var UnitList = make([]Unit, 4)
 var SquadList = make([]Squad, 2)
+var WeaponList = make([]Weapon, 2)
 
 func (u *Unit) SetPos(x int, y int) {
 	u.X = x
 	u.Y = y
 }
 
+func LoadWeapons() {
+	WeaponList[0] = Weapon{Id: 0, DisplayName: "Longbow", Key: "longbow", Rng: 5, Atk: 1, Dmg: 3, Uses: 20, UsesRemaining: 20}
+	WeaponList[1] = Weapon{Id: 1, DisplayName: "Longbow 2", Key: "longbow", Rng: 5, Atk: 1, Dmg: 3, Uses: 20, UsesRemaining: 20}
+}
+
 func LoadUnits() {
 	//BE CAREFUL ABOUT CHANGING THIS!!
-	UnitList[0] = Unit{Id: 0, Key: "bromuk", DisplayName: "Bromuk", Description: "A fearless Leader, loved by friends and hated by the rest.", Attributes: UnitAttributes{Atk: 4, Def: 18, Amr: 2, Spd: 5, Hps: 15, Dmg: 6, Rng: 1}, CardText: "*Defensive Line*: "}
-	UnitList[1] = Unit{Id: 1, Key: "stout_guard", DisplayName: "Stout Guard", Description: "You should be able to strike him down in one hit. If you can get past his shield.", Attributes: UnitAttributes{Atk: 0, Def: 20, Amr: 0, Spd: 3, Hps: 4, Dmg: 2, Rng: 1}}
+	UnitList[0] = Unit{Id: 0, Key: "bromuk", DisplayName: "Bromuk", Description: "A fearless Leader, loved by friends and hated by the rest.", Attributes: UnitAttributes{Def: 18, Amr: 2, Spd: 5, Hps: 15, WeaponIds: []int{1}}, CardText: "*Defensive Line*: "}
+	UnitList[1] = Unit{Id: 1, Key: "stout_guard", DisplayName: "Stout Guard", Description: "You should be able to strike him down in one hit. If you can get past his shield.", Attributes: UnitAttributes{Def: 20, Amr: 0, Spd: 3, Hps: 4, WeaponIds: []int{1}}}
 
-	UnitList[2] = Unit{Id: 2, Key: "corath", DisplayName: "Corath", Description: "", Attributes: UnitAttributes{Atk: 4, Def: 14, Amr: 2, Spd: 6, Hps: 15, Dmg: 8, Rng: 5}}
-	UnitList[3] = Unit{Id: 3, Key: "mysterious_archer", DisplayName: "Mysterious Archer", Description: "", Attributes: UnitAttributes{Atk: 1, Def: 14, Amr: 0, Spd: 4, Hps: 8, Dmg: 3, Rng: 4}}
+	UnitList[2] = Unit{Id: 2, Key: "corath", DisplayName: "Corath", Description: "", Attributes: UnitAttributes{Def: 14, Amr: 2, Spd: 6, Hps: 15, WeaponIds: []int{1}}}
+	UnitList[3] = Unit{Id: 3, Key: "mysterious_archer", DisplayName: "Mysterious Archer", Description: "", Attributes: UnitAttributes{Def: 14, Amr: 0, Spd: 4, Hps: 8, WeaponIds: []int{1}}}
 }
 
 func LoadSquads() {
@@ -71,6 +92,11 @@ func GetUnit(id int) Unit {
 func CreateUnit(id int) Unit {
 	ret := UnitList[id]
 	ret.Uid = uuid.NewV4()
+	for w := range ret.Attributes.WeaponIds {
+		nw := WeaponList[w]
+		nw.Uid = uuid.NewV4()
+		ret.Attributes.Weapons = append(ret.Attributes.Weapons, nw)
+	}
 	return ret
 }
 

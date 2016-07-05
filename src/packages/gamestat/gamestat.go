@@ -79,13 +79,29 @@ func (g *GameStat) EndGame() {
 	g.Status = "ENDED"
 }
 
-func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit) {
+func (g *GameStat) GetWeapon(wId string, owner int) *units.Weapon {
+	for s := range g.Armies[owner].Squads {
+		for _, u := range g.Armies[owner].Squads[s].Grunts {
+			for _, w := range u.Attributes.Weapons {
+				if w.Uid.String() == wId {
+					return &w
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, wId string) {
+
+	w := g.GetWeapon(wId, attacker.Team)
+
 	if g.UnitActionCounts[attacker] > 0 {
-		if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= attacker.Attributes.Rng {
+		if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= w.Rng {
 			r := dice.Roll(20)
-			g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(attacker.Attributes.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
-			if (r + attacker.Attributes.Atk) > defender.Attributes.Def {
-				defender.Attributes.Hps -= attacker.Attributes.Dmg
+			g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
+			if (r + w.Atk) > defender.Attributes.Def {
+				defender.Attributes.Hps -= w.Dmg
 				if defender.Attributes.Hps <= 0 {
 					delete(g.UnitActionCounts, defender)
 				}
@@ -138,7 +154,6 @@ func (g *GameStat) SpawnAllUnits() {
 		fmt.Println("==============")
 		for s := range g.Armies[team].Squads {
 			for k := range g.Armies[team].Squads[s].Grunts {
-				//needs to be a pointer to this array? makes changes to this array but loop still uses old copy
 				grunt := &g.Armies[team].Squads[s].Grunts[k]
 				g.Map.SpawnUnitOnFirstAvailable(grunt, team)
 			}

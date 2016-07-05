@@ -74,10 +74,13 @@ window.addEventListener("load", function(evt) {
                 break;
               case 'game_turn':
                 currentTurn = parseInt(message.Message);
+                clr();
                 var btn = document.getElementById('endturn');
                 if (myTurn()) {
                   btn.style.display = 'block'
+                  print("It's your turn!");
                 } else {
+                  print("Your opponents turn has begun");
                   btn.style.display = 'none'
                 }
                 break;
