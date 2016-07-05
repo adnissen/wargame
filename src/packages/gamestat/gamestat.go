@@ -147,6 +147,19 @@ func (g *GameStat) SpawnAllUnits() {
 	}
 }
 
+func (g *GameStat) EndTurn(c *gameclient.GameClient) {
+	if c != g.Players[g.CurrentTurn] {
+		return
+	}
+	if g.CurrentTurn == 0 {
+		g.CurrentTurn = 1
+	} else {
+		g.CurrentTurn = 0
+	}
+
+	g.SendMessageToAllPlayers("game_turn", []byte(strconv.Itoa(g.CurrentTurn)))
+}
+
 func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat {
 	if !reflect.DeepEqual(p1.CurrentGame, uuid.UUID{}) || !reflect.DeepEqual(p2.CurrentGame, uuid.UUID{}) {
 		return nil
@@ -160,6 +173,7 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 	gstat.SpawnAllUnits()
 	gstat.SendMessageToAllPlayers("game_start_army_data", gstat.GetUnitJson())
 	gstat.ResetActions()
+	gstat.SendMessageToAllPlayers("game_turn", []byte(strconv.Itoa(gstat.CurrentTurn)))
 
 	return &gstat
 }

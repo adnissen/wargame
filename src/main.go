@@ -124,6 +124,12 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			newClient.SendMessage([]byte(newClient.CurrentGame.String()))
 		}
 
+		if string(message) == "end_turn" {
+			if &newClient.CurrentGame != nil {
+				runningGames[newClient.CurrentGame.String()].EndTurn(newClient)
+			}
+		}
+
 		cm := ClientMessage{}
 		json.Unmarshal(message, &cm)
 
