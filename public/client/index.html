@@ -232,10 +232,15 @@ window.addEventListener("load", function(evt) {
         var grid = mapMatrix.clone();
         var finder = new PF.AStarFinder();
         var path = finder.findPath(self.x, self.y, x, y, grid);
-        console.log(path);
-        if (path.length === 0) {
-
+        if (path.length === 0 || path.length - 1 > self.attributes.Spd) {
+          return;
         }
+        var ret = {};
+        ret.messageType = "move";
+        ret.message = {};
+        ret.message.uid = self.uid;
+        ret.message.moves = path;
+        ws.send(JSON.stringify(ret));
       }
 
     }

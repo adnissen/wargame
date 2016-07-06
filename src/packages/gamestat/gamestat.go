@@ -23,6 +23,7 @@ type GameStat struct {
 	CurrentTurn      int
 	Map              gamemap.Map
 	UnitActionCounts map[*units.Unit]int
+	UnitCombatCounts map[*units.Unit]int
 }
 
 func (g *GameStat) SendMessageToAllPlayers(mt string, m []byte) {
@@ -39,8 +40,10 @@ func (g *GameStat) ResetActions() {
 		for i, _ := range g.Armies[k].Squads {
 			for j, _ := range g.Armies[k].Squads[i].Grunts {
 				g.UnitActionCounts[&g.Armies[k].Squads[i].Grunts[j]] = 2
+				g.UnitCombatCounts[&g.Armies[k].Squads[i].Grunts[j]] = 1
 			}
 			g.UnitActionCounts[&g.Armies[k].Squads[i].Leader] = 2
+			g.UnitCombatCounts[&g.Armies[k].Squads[i].Leader] = 1
 		}
 	}
 }
@@ -103,28 +106,60 @@ func (g *GameStat) GetUnit(wId string, owner int) *units.Unit {
 	return nil
 }
 
-func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, wId string) {
+func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, wId string, owner int) {
+	w := g.GetWeapon(wId, owner)
 
-	w := g.GetWeapon(wId, attacker.Team)
+	if w.UsesRemaining <= 0 {
+		return
+	}
 
-	if g.UnitActionCounts[attacker] > 0 {
-		if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= w.Rng {
-			r := dice.Roll(20)
-			g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
-			if (r + w.Atk) > defender.Attributes.Def {
-				defender.Attributes.Hps -= w.Dmg
-				if defender.Attributes.Hps <= 0 {
-					delete(g.UnitActionCounts, defender)
-				}
-			}
-			//attacking is the last thing you can do
-			g.UnitActionCounts[attacker] = 0
+	if g.UnitActionCounts[u] <= 0 {
+		return
+	}
+
+	if w.NoAttack != true {
+		if g.UnitCombatCounts[u] <= 0 {
+			return
 		}
+	}
+	//pre attack
+	if w.Ability == true {
+		//use ability here
+	}
+
+	if w.NoAttack != true {
+		g.Attack(u, target, w)
+	}
+
+	//post attack
+	if w.Ability == true {
+		//use ability here
+	}
+}
+
+func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.Weapon) {
+
+	if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= w.Rng {
+		r := dice.Roll(20)
+		g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
+		if (r + w.Atk) > defender.Attributes.Def {
+			defender.Attributes.Hps -= w.Dmg
+			if defender.Attributes.Hps <= 0 {
+				delete(g.UnitActionCounts, defender)
+				delete(g.UnitCombatCounts, defender)
+			}
+		}
+		g.UnitCombatCounts[attacker] -= 1
+		g.UnitActionCounts[attacker] -= 1
 	}
 }
 
 func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 	moved := false
+
+	if g.UnitActionCounts[unit] <= 0 {
+		return false
+	}
 
 	if gamemap.DistanceBetweenTiles(unit.X, unit.Y, moves[len(moves)-1][0], moves[len(moves)-1][1]) > unit.Attributes.Spd {
 		return false
@@ -134,7 +169,7 @@ func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 		return false
 	}
 
-	if len(moves)-2 > unit.Attributes.Spd {
+	if len(moves)-1 > unit.Attributes.Spd {
 		return false
 	}
 
