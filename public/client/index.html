@@ -2,6 +2,7 @@
 <head>
 <meta charset="utf-8">
 <script type="text/javascript" src="/public/dist/phaser.js"></script>
+<script type="text/javascript" src="/public/dist/pathfinding-browser.min.js"></script>
   <style type="text/css">
       body {
           margin: 0;
@@ -83,6 +84,7 @@ window.addEventListener("load", function(evt) {
                   print("Your opponents turn has begun");
                   btn.style.display = 'none'
                 }
+                updateMatrix();
                 break;
               default:
                 console.log("Message " + message + " recieved with no handler!")
@@ -148,9 +150,27 @@ window.addEventListener("load", function(evt) {
     var currentTurn = null;
     var myColor = null;
     var cursor = null;
+    var selectedUnit = null;
+    var mapMatrix = null;
 
     function myTurn() {
       return currentTurn === myTeam;
+    }
+
+    function updateMatrix() {
+      var w = tileArray.length;
+      var h = tileArray[0].length;
+      var matrix = new PF.Grid(w, h);
+      for (var i = 0; i < w; i++) {
+        for (var k = 0; k < h; k++) {
+          if (tileArray[i][k].walkable && !tileArray[i][k].unit) {
+            matrix.setWalkableAt(i, k, true);
+          } else {
+            matrix.setWalkableAt(i, k, false);
+          }
+        }
+      }
+      mapMatrix = matrix;
     }
 
     function preload() {
@@ -186,6 +206,9 @@ window.addEventListener("load", function(evt) {
       this.uid = params.Uid;
       this.attributes = params.Attributes;
 
+      tileArray[this.x][this.y].unit = this.uid;
+      console.log(tileArray[this.x][this.y])
+
       var self = this;
 
       this.sprite.events.onInputDown.add(function(){
@@ -194,15 +217,26 @@ window.addEventListener("load", function(evt) {
           print("friendly unit: " + self.uid);
         else
           print("enemy unit: " + self.uid);
+        print("x: " + self.x + " y: " + self.y)
         print("team: " + self.color)
         print("attributes: " + JSON.stringify(self.attributes))
       });
 
-
       this.sprite.events.onInputDown.add(function(){
         cursor.x = self.x * TILESIZE;
         cursor.y = self.y * TILESIZE;
+        selectedUnit = self;
       })
+
+      self.move = function(x, y) {
+        var grid = mapMatrix.clone();
+        var finder = new PF.AStarFinder();
+        var path = finder.findPath(self.x, self.y, x, y, grid);
+        console.log(path);
+        if (path.length === 0) {
+
+        }
+      }
 
     }
 
@@ -246,6 +280,9 @@ window.addEventListener("load", function(evt) {
       this.castle = params.Castle || false;
       this.capturable = params.Capturable || false;
       this.owner = params.Owner || 0;
+      if (params.Unit) {
+        this.unit = Params.Unit.Uid;
+      }
       this.x = x / TILESIZE;
       this.y = y / TILESIZE;
 
@@ -264,6 +301,12 @@ window.addEventListener("load", function(evt) {
         }
 
       }
+
+      this.sprite.events.onInputDown.add(function(){
+        if (inGame && selectedUnit && selectedUnit.team == myTeam && myTurn()) {
+          selectedUnit.move(self.x, self.y);
+        }
+      })
 
       this.sprite.events.onInputDown.add(function(){
         if (!inGame) {

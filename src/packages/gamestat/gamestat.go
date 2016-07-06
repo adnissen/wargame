@@ -92,6 +92,17 @@ func (g *GameStat) GetWeapon(wId string, owner int) *units.Weapon {
 	return nil
 }
 
+func (g *GameStat) GetUnit(wId string, owner int) *units.Unit {
+	for s := range g.Armies[owner].Squads {
+		for _, u := range g.Armies[owner].Squads[s].Grunts {
+			if u.Uid.String() == wId {
+				return &u
+			}
+		}
+	}
+	return nil
+}
+
 func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, wId string) {
 
 	w := g.GetWeapon(wId, attacker.Team)
