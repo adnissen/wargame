@@ -236,10 +236,11 @@ window.addEventListener("load", function(evt) {
           return;
         }
         var ret = {};
-        ret.messageType = "move";
+        ret.messageType = "game_move";
         ret.message = {};
         ret.message.uid = self.uid;
         ret.message.moves = path;
+        ret.message = JSON.stringify(ret.message)
         ws.send(JSON.stringify(ret));
       }
 

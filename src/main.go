@@ -131,6 +131,39 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		if cm.MessageType == "map_export_data" {
 			gamemap.InsertMap(gamemap.ImportMap(cm.Message))
 		}
+
+		if cm.MessageType == "game_move" {
+			if newClient.CurrentGame.String() == "00000000-0000-0000-0000-000000000000" {
+				return
+			}
+			var dat map[string]interface{}
+			if err := json.Unmarshal([]byte(cm.Message), &dat); err != nil {
+				panic(err)
+			}
+
+			// "[[1, 2], [1, 3], [1, 4]]"
+			moves := dat["moves"].([]interface{})
+			// moves = ["[1, 2]", "[1, 3]", "[1, 4]"]
+			mvs := make([][]int, len(moves))
+			for f := 0; f < len(mvs); f++ {
+				mvs[f] = make([]int, 2)
+			}
+			// mvs = [[], [], []]
+
+			for i := range moves {
+				t := moves[i].([]interface{})
+				for k := range t {
+					mvs[i][k] = int(t[k].(float64))
+				}
+			}
+			g := runningGames[newClient.CurrentGame.String()]
+			moved := g.MoveUnit(g.GetUnit(dat["uid"].(string), g.GetPlayerIndex(newClient)), mvs)
+			fmt.Println(moved)
+
+			if moved == true {
+				g.SendMessageToAllPlayers("game_move", []byte(cm.Message))
+			}
+		}
 	}
 }
 

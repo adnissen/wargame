@@ -35,6 +35,7 @@ func (g *GameStat) SendMessageToAllPlayers(mt string, m []byte) {
 func (g *GameStat) ResetActions() {
 	if g.UnitActionCounts == nil {
 		g.UnitActionCounts = make(map[*units.Unit]int)
+		g.UnitCombatCounts = make(map[*units.Unit]int)
 	}
 	for k, _ := range g.Armies {
 		for i, _ := range g.Armies[k].Squads {
@@ -46,6 +47,15 @@ func (g *GameStat) ResetActions() {
 			g.UnitCombatCounts[&g.Armies[k].Squads[i].Leader] = 1
 		}
 	}
+}
+
+func (g *GameStat) GetPlayerIndex(player *gameclient.GameClient) int {
+	for i, p := range g.Players {
+		if p == player {
+			return i
+		}
+	}
+	return -1
 }
 
 func (g *GameStat) GetUnitOnTile(x int, y int) *units.Unit {
@@ -102,6 +112,9 @@ func (g *GameStat) GetUnit(wId string, owner int) *units.Unit {
 				return &u
 			}
 		}
+		if g.Armies[owner].Squads[s].Leader.Uid.String() == wId {
+			return &g.Armies[owner].Squads[s].Leader
+		}
 	}
 	return nil
 }
@@ -156,20 +169,33 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 
 func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 	moved := false
-
+	fmt.Println(unit)
+	fmt.Println(g.UnitActionCounts)
+	fmt.Println(g.UnitActionCounts[unit])
 	if g.UnitActionCounts[unit] <= 0 {
+		fmt.Print("Failed at ")
+		fmt.Println(1)
 		return false
 	}
 
 	if gamemap.DistanceBetweenTiles(unit.X, unit.Y, moves[len(moves)-1][0], moves[len(moves)-1][1]) > unit.Attributes.Spd {
+		fmt.Print("Failed at ")
+
+		fmt.Println(2)
 		return false
 	}
 
 	if len(moves) == 1 {
+		fmt.Print("Failed at ")
+		fmt.Println(3)
+
 		return false
 	}
 
 	if len(moves)-1 > unit.Attributes.Spd {
+		fmt.Print("Failed at ")
+		fmt.Println(4)
+
 		return false
 	}
 
@@ -178,16 +204,19 @@ func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 			continue
 		}
 		ct := g.GetTile(unit.X, unit.Y)
-		nt := g.GetTile(m[0], m[0])
+		nt := g.GetTile(m[0], m[1])
 		if nt.IsOpen() == false {
+			fmt.Println("was mid move, tile not empty")
 			return moved
 		}
 		if gamemap.DistanceBetweenTiles(ct.X, ct.Y, nt.X, nt.Y) > 1 {
+			fmt.Println("was distance more than once")
 			return moved
 		}
 		unit.SetPos(nt.X, nt.Y)
 		nt.Unit = unit
 		ct.Unit = nil
+		moved = true
 	}
 	return moved
 }
