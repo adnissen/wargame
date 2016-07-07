@@ -101,6 +101,11 @@ func (g *GameStat) GetWeapon(wId string, owner int) *units.Weapon {
 				}
 			}
 		}
+		for _, w := range g.Armies[owner].Squads[s].Leader.Attributes.Weapons {
+			if w.Uid.String() == wId {
+				return &w
+			}
+		}
 	}
 	return nil
 }
@@ -119,20 +124,36 @@ func (g *GameStat) GetUnit(wId string, owner int) *units.Unit {
 	return nil
 }
 
-func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, wId string, owner int) {
-	w := g.GetWeapon(wId, owner)
+func (g *GameStat) GetUnitGlobal(wId string) *units.Unit {
+	for a := range g.Armies {
+		for s := range g.Armies[a].Squads {
+			for u := range g.Armies[a].Squads[s].Grunts {
+				if g.Armies[a].Squads[s].Grunts[u].Uid.String() == wId {
+					return &g.Armies[a].Squads[s].Grunts[u]
+				}
+			}
+			if g.Armies[a].Squads[s].Leader.Uid.String() == wId {
+				return &g.Armies[a].Squads[s].Leader
+			}
+		}
+	}
+	return nil
+}
+
+func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon, owner int) bool {
+	used := false
 
 	if w.UsesRemaining <= 0 {
-		return
+		return false
 	}
 
 	if g.UnitActionCounts[u.Uid.String()] <= 0 {
-		return
+		return false
 	}
 
 	if w.NoAttack != true {
 		if g.UnitCombatCounts[u.Uid.String()] <= 0 {
-			return
+			return false
 		}
 	}
 	//pre attack
@@ -141,17 +162,19 @@ func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, wId string, owne
 	}
 
 	if w.NoAttack != true {
-		g.Attack(u, target, w)
+		used = g.Attack(u, target, w)
 	}
 
 	//post attack
 	if w.Ability == true {
 		//use ability here
 	}
+
+	return used
 }
 
-func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.Weapon) {
-
+func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.Weapon) bool {
+	attacked := false
 	if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= w.Rng {
 		r := dice.Roll(20)
 		g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
@@ -164,7 +187,9 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 		}
 		g.UnitCombatCounts[attacker.Uid.String()] -= 1
 		g.UnitActionCounts[attacker.Uid.String()] -= 1
+		attacked = true
 	}
+	return attacked
 }
 
 func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {

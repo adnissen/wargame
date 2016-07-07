@@ -83,9 +83,15 @@ window.addEventListener("load", function(evt) {
                 u.sprite.x = u.x * TILESIZE;
                 u.sprite.y = u.y * TILESIZE;
                 u.actionCount = u.actionCount - 1;
-                if (u.actionCount <= 0) u.combatCount = 0;
-                cursor.x = u.x * TILESIZE;
-                cursor.y = u.y * TILESIZE;
+                if (u.actionCount <= 0) {
+                  u.combatCount = 0;
+                  u.sprite.tint = 0x333333;
+                }
+                if (selectedUnit == u) {
+                  cursor.x = u.x * TILESIZE;
+                  cursor.y = u.y * TILESIZE;
+                  u.showInfo();
+                }
                 updateMatrix();
                 break;
               case 'game_turn':
@@ -168,6 +174,7 @@ window.addEventListener("load", function(evt) {
     var cursor = null;
     var selectedUnit = null;
     var mapMatrix = null;
+    var weaponsUi = document.getElementById("weapons");
 
     function myTurn() {
       return currentTurn === myTeam;
@@ -205,10 +212,11 @@ window.addEventListener("load", function(evt) {
 
     function resetActions() {
       Object.keys(unitHash).forEach(function (key) {
-          var value = unitHash[key]
-          value.actionCount = 2;
-          value.combatCount = 1;
+          var unit = unitHash[key]
+          unit.actionCount = 2;
+          unit.combatCount = 1;
           // iteration code
+          unit.sprite.tint = 0xffffff;
       })
     }
 
@@ -234,28 +242,73 @@ window.addEventListener("load", function(evt) {
       this.attributes = params.Attributes;
 
       tileArray[this.x][this.y].unit = this.uid;
-      console.log(tileArray[this.x][this.y])
 
       var self = this;
 
       this.sprite.events.onInputDown.add(function(){
-        clr();
-        if (myTeam == self.team)
-          print("friendly unit: " + self.uid);
-        else
-          print("enemy unit: " + self.uid);
-        if (self.leader) print("LEADER")
-        print("remaining actions: " + self.actionCount);
-        print("remaining combat actions: " + self.combatCount);
-        print("x: " + self.x + " y: " + self.y);
-        print("team: " + self.color);
-        print("attributes: " + JSON.stringify(self.attributes));
+        self.showInfo();
       });
 
+     self.showInfo = function(){
+       clr();
+       if (myTeam == self.team)
+         print("friendly unit: " + self.uid);
+       else
+         print("enemy unit: " + self.uid);
+       if (self.leader) print("LEADER")
+       print("remaining actions: " + self.actionCount);
+       print("remaining combat actions: " + self.combatCount);
+       print("x: " + self.x + " y: " + self.y);
+       print("team: " + self.color);
+       print("attributes: " + JSON.stringify(self.attributes));
+
+       print("weapons:");
+       print("");
+       self.attributes.Weapons.forEach(function(w){
+         print("------------");
+         print(w.DisplayName);
+         print("Durability: " + w.UsesRemaining);
+         print("ATK: " + w.Atk);
+         print("RNG: " + w.Rng);
+         print("DMG: " + w.Dmg);
+         print("------------");
+       })
+
+       if (myTurn() && myTeam != self.team && selectedUnit && selectedUnit.team === myTeam && selectedUnit.combatCount > 0) {
+         selectedUnit.attributes.Weapons.forEach(function(w){
+           print("ATTACK with:");
+           print("------------");
+           print(w.DisplayName);
+           print("Durability: " + w.UsesRemaining);
+           print("ATK: " + w.Atk);
+           print("RNG: " + w.Rng);
+           print("DMG: " + w.Dmg);
+           var useBtn = '<button id="' + w.Uid + '">Use</button>';
+           print(useBtn);
+           document.getElementById(w.Uid).addEventListener("click", function(){
+             var ret = {};
+             ret.messageType = "game_use_weapon";
+             ret.message = {};
+             ret.message.uid = selectedUnit.uid;
+             ret.message.target = self.uid;
+             ret.message.weapon = w.Uid;
+             ret.message = JSON.stringify(ret.message)
+             ws.send(JSON.stringify(ret));
+             console.log("attacked with weapon " + w.Uid);
+           });
+           print("------------");
+         })
+       }
+     }
+
       this.sprite.events.onInputDown.add(function(){
-        cursor.x = self.x * TILESIZE;
-        cursor.y = self.y * TILESIZE;
-        selectedUnit = self;
+        if (selectedUnit && selectedUnit.team !== self.team && selectedUnit.combatCount > 0 && selectedUnit.team == myTeam) {
+
+        } else {
+          cursor.x = self.x * TILESIZE;
+          cursor.y = self.y * TILESIZE;
+          selectedUnit = self;
+        }
       })
 
       self.move = function(x, y) {
@@ -532,6 +585,15 @@ window.addEventListener("load", function(evt) {
       if (game.input.keyboard.isDown(Phaser.Keyboard.D)){
         game.camera.x += 5;
       }
+
+      if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)){
+        selectedUnit = null;
+        cursor.x = -48;
+        cursor.y = -48;
+        clr();
+        if (myTurn()) print("It is your turn.");
+        else print("It is your opponents turn.");
+      }
     }
 
 });
@@ -554,6 +616,7 @@ You can change the message and send multiple times.
 <button id="endturn">End Turn</button>
 </td><td valign="top" width="50%">
 <div id="output"></div>
+<div id="weapons"></div>
 </td></tr></table>
 <div id="game">
 

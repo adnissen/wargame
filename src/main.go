@@ -132,6 +132,25 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			gamemap.InsertMap(gamemap.ImportMap(cm.Message))
 		}
 
+		if cm.MessageType == "game_use_weapon" {
+			if newClient.CurrentGame.String() == "00000000-0000-0000-0000-000000000000" {
+				return
+			}
+			var dat map[string]interface{}
+			if err := json.Unmarshal([]byte(cm.Message), &dat); err != nil {
+				panic(err)
+			}
+
+			g := runningGames[newClient.CurrentGame.String()]
+			u := g.GetUnit(dat["uid"].(string), g.GetPlayerIndex(newClient))
+			t := g.GetUnitGlobal(dat["target"].(string))
+			w := g.GetWeapon(dat["weapon"].(string), g.GetPlayerIndex(newClient))
+			fmt.Println(u)
+			fmt.Println(t)
+			fmt.Println(w)
+			g.UseWeapon(u, t, w, g.GetPlayerIndex(newClient))
+		}
+
 		if cm.MessageType == "game_move" {
 			if newClient.CurrentGame.String() == "00000000-0000-0000-0000-000000000000" {
 				return
