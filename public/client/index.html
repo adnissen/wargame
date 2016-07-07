@@ -73,6 +73,21 @@ window.addEventListener("load", function(evt) {
                 loadUnits(m);
                 cursor = game.add.sprite(0, 0, 'tile_outline_' + myColor);
                 break;
+              case 'game_move':
+                var m = JSON.parse(message.Message);
+                var u = unitHash[m.uid];
+                tileArray[u.x][u.y].unit = '';
+                u.x = m.moves[m.moves.length - 1][0];
+                u.y = m.moves[m.moves.length - 1][1];
+                tileArray[u.x][u.y].unit = u.uid;
+                u.sprite.x = u.x * TILESIZE;
+                u.sprite.y = u.y * TILESIZE;
+                u.actionCount = u.actionCount - 1;
+                if (u.actionCount <= 0) u.combatCount = 0;
+                cursor.x = u.x * TILESIZE;
+                cursor.y = u.y * TILESIZE;
+                updateMatrix();
+                break;
               case 'game_turn':
                 currentTurn = parseInt(message.Message);
                 clr();
@@ -84,6 +99,7 @@ window.addEventListener("load", function(evt) {
                   print("Your opponents turn has begun");
                   btn.style.display = 'none'
                 }
+                resetActions();
                 updateMatrix();
                 break;
               default:
@@ -187,6 +203,15 @@ window.addEventListener("load", function(evt) {
       game.load.image('archerguy_blue', 'public/client/assets/sprites/units/archerguy_blue.png');
     }
 
+    function resetActions() {
+      Object.keys(unitHash).forEach(function (key) {
+          var value = unitHash[key]
+          value.actionCount = 2;
+          value.combatCount = 1;
+          // iteration code
+      })
+    }
+
     var Unit = function(x, y, key, params){
       if (params) {
         x = params.X * TILESIZE;
@@ -202,7 +227,9 @@ window.addEventListener("load", function(evt) {
       this.owner = params.Owner || 0;
       this.x = x / TILESIZE;
       this.y = y / TILESIZE;
-
+      this.actionCount = 2;
+      this.combatCount = 1;
+      this.leader = params.leader || false;
       this.uid = params.Uid;
       this.attributes = params.Attributes;
 
@@ -217,9 +244,12 @@ window.addEventListener("load", function(evt) {
           print("friendly unit: " + self.uid);
         else
           print("enemy unit: " + self.uid);
-        print("x: " + self.x + " y: " + self.y)
-        print("team: " + self.color)
-        print("attributes: " + JSON.stringify(self.attributes))
+        if (self.leader) print("LEADER")
+        print("remaining actions: " + self.actionCount);
+        print("remaining combat actions: " + self.combatCount);
+        print("x: " + self.x + " y: " + self.y);
+        print("team: " + self.color);
+        print("attributes: " + JSON.stringify(self.attributes));
       });
 
       this.sprite.events.onInputDown.add(function(){
@@ -242,6 +272,7 @@ window.addEventListener("load", function(evt) {
         ret.message.moves = path;
         ret.message = JSON.stringify(ret.message)
         ws.send(JSON.stringify(ret));
+        updateMatrix();
       }
 
     }
@@ -257,6 +288,7 @@ window.addEventListener("load", function(evt) {
           if (ary[i].Squads[k].Leader) {
             var u = ary[i].Squads[k].Leader;
             u.team = i;
+            u.leader = true;
             unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'archerguy', u);
           }
         }

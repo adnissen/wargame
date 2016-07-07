@@ -22,8 +22,8 @@ type GameStat struct {
 	Status           string
 	CurrentTurn      int
 	Map              gamemap.Map
-	UnitActionCounts map[*units.Unit]int
-	UnitCombatCounts map[*units.Unit]int
+	UnitActionCounts map[string]int
+	UnitCombatCounts map[string]int
 }
 
 func (g *GameStat) SendMessageToAllPlayers(mt string, m []byte) {
@@ -34,17 +34,17 @@ func (g *GameStat) SendMessageToAllPlayers(mt string, m []byte) {
 
 func (g *GameStat) ResetActions() {
 	if g.UnitActionCounts == nil {
-		g.UnitActionCounts = make(map[*units.Unit]int)
-		g.UnitCombatCounts = make(map[*units.Unit]int)
+		g.UnitActionCounts = make(map[string]int)
+		g.UnitCombatCounts = make(map[string]int)
 	}
 	for k, _ := range g.Armies {
 		for i, _ := range g.Armies[k].Squads {
 			for j, _ := range g.Armies[k].Squads[i].Grunts {
-				g.UnitActionCounts[&g.Armies[k].Squads[i].Grunts[j]] = 2
-				g.UnitCombatCounts[&g.Armies[k].Squads[i].Grunts[j]] = 1
+				g.UnitActionCounts[g.Armies[k].Squads[i].Grunts[j].Uid.String()] = 2
+				g.UnitCombatCounts[g.Armies[k].Squads[i].Grunts[j].Uid.String()] = 1
 			}
-			g.UnitActionCounts[&g.Armies[k].Squads[i].Leader] = 2
-			g.UnitCombatCounts[&g.Armies[k].Squads[i].Leader] = 1
+			g.UnitActionCounts[g.Armies[k].Squads[i].Leader.Uid.String()] = 2
+			g.UnitCombatCounts[g.Armies[k].Squads[i].Leader.Uid.String()] = 1
 		}
 	}
 }
@@ -107,9 +107,9 @@ func (g *GameStat) GetWeapon(wId string, owner int) *units.Weapon {
 
 func (g *GameStat) GetUnit(wId string, owner int) *units.Unit {
 	for s := range g.Armies[owner].Squads {
-		for _, u := range g.Armies[owner].Squads[s].Grunts {
-			if u.Uid.String() == wId {
-				return &u
+		for u := range g.Armies[owner].Squads[s].Grunts {
+			if g.Armies[owner].Squads[s].Grunts[u].Uid.String() == wId {
+				return &g.Armies[owner].Squads[s].Grunts[u]
 			}
 		}
 		if g.Armies[owner].Squads[s].Leader.Uid.String() == wId {
@@ -126,12 +126,12 @@ func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, wId string, owne
 		return
 	}
 
-	if g.UnitActionCounts[u] <= 0 {
+	if g.UnitActionCounts[u.Uid.String()] <= 0 {
 		return
 	}
 
 	if w.NoAttack != true {
-		if g.UnitCombatCounts[u] <= 0 {
+		if g.UnitCombatCounts[u.Uid.String()] <= 0 {
 			return
 		}
 	}
@@ -158,21 +158,25 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 		if (r + w.Atk) > defender.Attributes.Def {
 			defender.Attributes.Hps -= w.Dmg
 			if defender.Attributes.Hps <= 0 {
-				delete(g.UnitActionCounts, defender)
-				delete(g.UnitCombatCounts, defender)
+				delete(g.UnitActionCounts, defender.Uid.String())
+				delete(g.UnitCombatCounts, defender.Uid.String())
 			}
 		}
-		g.UnitCombatCounts[attacker] -= 1
-		g.UnitActionCounts[attacker] -= 1
+		g.UnitCombatCounts[attacker.Uid.String()] -= 1
+		g.UnitActionCounts[attacker.Uid.String()] -= 1
 	}
 }
 
 func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 	moved := false
 	fmt.Println(unit)
-	fmt.Println(g.UnitActionCounts)
-	fmt.Println(g.UnitActionCounts[unit])
-	if g.UnitActionCounts[unit] <= 0 {
+	for k, v := range g.UnitActionCounts {
+		fmt.Print(k)
+		fmt.Print(" : ")
+		fmt.Println(v)
+	}
+	fmt.Println(g.UnitActionCounts[unit.Uid.String()])
+	if g.UnitActionCounts[unit.Uid.String()] <= 0 {
 		fmt.Print("Failed at ")
 		fmt.Println(1)
 		return false
@@ -218,6 +222,9 @@ func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 		ct.Unit = nil
 		moved = true
 	}
+	if moved == true {
+		g.UnitActionCounts[unit.Uid.String()] = g.UnitActionCounts[unit.Uid.String()] - 1
+	}
 	return moved
 }
 
@@ -246,7 +253,7 @@ func (g *GameStat) EndTurn(c *gameclient.GameClient) {
 	} else {
 		g.CurrentTurn = 0
 	}
-
+	g.ResetActions()
 	g.SendMessageToAllPlayers("game_turn", []byte(strconv.Itoa(g.CurrentTurn)))
 }
 
