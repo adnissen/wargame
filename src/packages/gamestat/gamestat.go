@@ -110,7 +110,7 @@ func (g *GameStat) GetWeapon(wId string, owner int) *units.Weapon {
 	return nil
 }
 
-func (g *GameStat) UnitsHasSightTo(u *units.Unit, t *units.Unit) bool {
+func (g *GameStat) UnitHasSightTo(u *units.Unit, t *units.Unit) bool {
 	/*
 		https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
 	*/
@@ -130,11 +130,19 @@ func (g *GameStat) UnitsHasSightTo(u *units.Unit, t *units.Unit) bool {
 	}
 	for _, v := range ray {
 		tempU := g.GetUnitOnTile(v[0], v[1])
+		if tempU == nil {
+			continue
+		}
 		if tempU == t || tempU == u {
 			continue
 		}
 		if tempU.Team != u.Team {
 			vision = false
+			break
+		}
+		if g.GetTile(v[0], v[1]).BlocksVision == true {
+			vision = false
+			break
 		}
 	}
 	return vision
@@ -207,7 +215,7 @@ func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon,
 func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.Weapon) (bool, int) {
 	attacked := false
 	damage := -1
-	if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= w.Rng {
+	if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= w.Rng && g.UnitHasSightTo(attacker, defender) {
 		r := dice.Roll(20)
 		g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
 		if (r + w.Atk) > defender.Attributes.Def {
@@ -261,8 +269,11 @@ func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 		return false
 	}
 
+	startx := unit.X
+	starty := unit.Y
+	fmt.Println(moves)
 	for _, m := range moves {
-		if m[0] == unit.X && m[1] == unit.Y {
+		if m[0] == startx && m[1] == starty {
 			continue
 		}
 		ct := g.GetTile(unit.X, unit.Y)

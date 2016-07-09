@@ -278,33 +278,50 @@ window.addEventListener("load", function(evt) {
       mapMatrix = matrix;
     }
 
+    function newMatrix() {
+      var w = tileArray.length;
+      var h = tileArray[0].length;
+      var matrix = new PF.Grid(w, h);
+      for (var i = 0; i < w; i++) {
+        for (var k = 0; k < h; k++) {
+          if (tileArray[i][k].walkable && !tileArray[i][k].unit) {
+            matrix.setWalkableAt(i, k, true);
+          } else {
+            matrix.setWalkableAt(i, k, false);
+          }
+        }
+      }
+      window.tileArray = tileArray;
+      return matrix
+    }
+
     function preload() {
       //
       game.load.image('tile_outline', '/public/client/assets/sprites/tiles/tile_outline.png');
-      game.load.image('tile_outline_red', 'public/client/assets/sprites/tiles/tile_outline_red.png');
-      game.load.image('tile_outline_blue', 'public/client/assets/sprites/tiles/tile_outline_blue.png');
-      game.load.image('grass1', 'public/client/assets/sprites/tiles/grass1.png');
-      game.load.image('mountain1', 'public/client/assets/sprites/tiles/mountain1.png');
-      game.load.image('water1', 'public/client/assets/sprites/tiles/water1.png');
-      game.load.image('castle1', 'public/client/assets/sprites/tiles/castle1.png');
-      game.load.image('blank', 'public/client/assets/sprites/tiles/blank.png');
-      game.load.image('rock1', 'public/client/assets/sprites/tiles/rock1.png');
-      game.load.image('archerguy_red', 'public/client/assets/sprites/units/archerguy_red.png');
-      game.load.image('archerguy_blue', 'public/client/assets/sprites/units/archerguy_blue.png');
+      game.load.image('tile_outline_red', '/public/client/assets/sprites/tiles/tile_outline_red.png');
+      game.load.image('tile_outline_blue', '/public/client/assets/sprites/tiles/tile_outline_blue.png');
+      game.load.image('grass1', '/public/client/assets/sprites/tiles/grass1.png');
+      game.load.image('mountain1', '/public/client/assets/sprites/tiles/mountain1.png');
+      game.load.image('water1', '/public/client/assets/sprites/tiles/water1.png');
+      game.load.image('castle1', '/public/client/assets/sprites/tiles/castle1.png');
+      game.load.image('blank', '/public/client/assets/sprites/tiles/blank.png');
+      game.load.image('rock1', '/public/client/assets/sprites/tiles/rock1.png');
+      game.load.image('archerguy_red', '/public/client/assets/sprites/units/archerguy_red.png');
+      game.load.image('archerguy_blue', '/public/client/assets/sprites/units/archerguy_blue.png');
 
-      game.load.image('river1', 'public/client/assets/sprites/tiles/river1.png');
-      game.load.image('river2', 'public/client/assets/sprites/tiles/river2.png');
-      game.load.image('river3', 'public/client/assets/sprites/tiles/river3.png');
-      game.load.image('river4', 'public/client/assets/sprites/tiles/river4.png');
-      game.load.image('river5', 'public/client/assets/sprites/tiles/river5.png');
-      game.load.image('river6', 'public/client/assets/sprites/tiles/river6.png');
-      game.load.image('river7', 'public/client/assets/sprites/tiles/river7.png');
-      game.load.image('river8', 'public/client/assets/sprites/tiles/river8.png');
-      game.load.image('river9', 'public/client/assets/sprites/tiles/river9.png');
-      game.load.image('river10', 'public/client/assets/sprites/tiles/river10.png');
-      game.load.image('river11', 'public/client/assets/sprites/tiles/river11.png');
-      game.load.image('river12', 'public/client/assets/sprites/tiles/river12.png');
-      game.load.image('river13', 'public/client/assets/sprites/tiles/river13.png');
+      game.load.image('river1', '/public/client/assets/sprites/tiles/river1.png');
+      game.load.image('river2', '/public/client/assets/sprites/tiles/river2.png');
+      game.load.image('river3', '/public/client/assets/sprites/tiles/river3.png');
+      game.load.image('river4', '/public/client/assets/sprites/tiles/river4.png');
+      game.load.image('river5', '/public/client/assets/sprites/tiles/river5.png');
+      game.load.image('river6', '/public/client/assets/sprites/tiles/river6.png');
+      game.load.image('river7', '/public/client/assets/sprites/tiles/river7.png');
+      game.load.image('river8', '/public/client/assets/sprites/tiles/river8.png');
+      game.load.image('river9', '/public/client/assets/sprites/tiles/river9.png');
+      game.load.image('river10', '/public/client/assets/sprites/tiles/river10.png');
+      game.load.image('river11', '/public/client/assets/sprites/tiles/river11.png');
+      game.load.image('river12', '/public/client/assets/sprites/tiles/river12.png');
+      game.load.image('river13', '/public/client/assets/sprites/tiles/river13.png');
 
     }
 
@@ -399,7 +416,7 @@ window.addEventListener("load", function(evt) {
        print("remaining attacks: " + self.combatCount, 'hud-output');
        print("team: " + self.color, 'hud-output');
        print("hitpoints: " + self.attributes.Hps, 'stat-output');
-       print("speed: " + self.attributes.Hps, 'stat-output');
+       print("speed: " + self.attributes.Spd, 'stat-output');
        print("defense: " + self.attributes.Def, 'stat-output');
        print("armor: " + self.attributes.Amr, 'stat-output');
 
@@ -454,10 +471,11 @@ window.addEventListener("load", function(evt) {
       })
 
       self.move = function(x, y) {
-        var grid = mapMatrix.clone();
+        var grid = newMatrix();
         var finder = new PF.AStarFinder();
+        console.log(grid);
         var path = finder.findPath(self.x, self.y, x, y, grid);
-        if (path.length === 0 || path.length - 1 > self.attributes.Spd) {
+        if (path.length === 0 || path.length - 2 > self.attributes.Spd) {
           return;
         }
         var ret = {};
@@ -466,6 +484,7 @@ window.addEventListener("load", function(evt) {
         ret.message.uid = self.uid;
         ret.message.moves = path;
         ret.message = JSON.stringify(ret.message)
+        console.log("MOVING ON PATH " + path);
         ws.send(JSON.stringify(ret));
         updateMatrix();
       }
@@ -505,13 +524,19 @@ window.addEventListener("load", function(evt) {
       } else if (!inGame){
         this.overlay = game.add.sprite(x, y, this.overlayKey);
       }
-      this.sprite.inputEnabled = true;
-      this.walkable = params.Walkable || true;
+      this.sprite.inputEnabled = true
+      if (params.Walkable === false) {
+        this.walkable
+      } else {
+        this.walkable = true;
+      }
+
       this.spawn = params.Spawn || false;
       this.spawnTeam = params.SpawnTeam || 0;
       this.tileType = params.TileType || 'grass';
       this.castle = params.Castle || false;
       this.capturable = params.Capturable || false;
+      this.blocksVision = (params.BlocksVision) || false;
       this.owner = params.Owner || 0;
       if (params.Unit) {
         this.unit = params.Unit.Uid;
@@ -550,22 +575,26 @@ window.addEventListener("load", function(evt) {
               updateTexture('grass1');
               self.tileType = 'grass';
               self.walkable = true;
+              self.blocksVision = false;
               break;
             case 2:
               updateTexture('grass1');
               self.tileType = "river";
               self.walkable = false;
+              self.blocksVision = false;
               calculateWater()
               break;
             case 3:
               updateTexture('mountain1', 2);
               self.walkable = true;
               self.tileType = 'mountain'
+              self.blocksVision = true;
               break;
             case 4:
               updateTexture('blank', 2);
               self.castle = false;
               self.capturable = false;
+              self.blocksVision = false;
               break;
             case 5:
               updateTexture('tile_outline_red', 2);
@@ -644,11 +673,15 @@ window.addEventListener("load", function(evt) {
     }
 
     function loadMap(mapAry){
-      mapAry = JSON.parse(mapAry.Message).Map;
+      var tempM = JSON.parse(mapAry.Message).Map;
+      var mapAry = JSON.parse(JSON.stringify(tempM));
       var w = mapAry.length;
       var h = mapAry[0].length;
       for (var i = 0; i < w; i++) {
         for (var k = 0; k < h; k++) {
+          if (i == 4 && k == 7) {
+            debugger;
+          }
           t = mapAry[i][k];
           mapAry[i][k] = new MapTile(0, 0, '', t);
         }

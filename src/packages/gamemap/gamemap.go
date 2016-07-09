@@ -10,18 +10,19 @@ import (
 )
 
 type Tile struct {
-	TileType   string
-	Key        string
-	OverlayKey string
-	Walkable   bool
-	Spawn      bool
-	SpawnTeam  int
-	Castle     bool
-	Capturable bool
-	Owner      int
-	X          int
-	Y          int
-	Unit       *units.Unit
+	TileType     string
+	Key          string
+	OverlayKey   string
+	Walkable     bool
+	Spawn        bool
+	SpawnTeam    int
+	Castle       bool
+	Capturable   bool
+	BlocksVision bool
+	Owner        int
+	X            int
+	Y            int
+	Unit         *units.Unit
 }
 
 type Map struct {
