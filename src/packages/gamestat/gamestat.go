@@ -110,6 +110,36 @@ func (g *GameStat) GetWeapon(wId string, owner int) *units.Weapon {
 	return nil
 }
 
+func (g *GameStat) UnitsHasSightTo(u *units.Unit, t *units.Unit) bool {
+	/*
+		https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+	*/
+	dx := t.X - u.X
+	dy := t.Y - u.Y
+	D := dy - dx
+	y := u.Y
+	var ray [][]int
+	vision := true
+	for i := u.X; i < t.X-1; i++ {
+		ray = append(ray, []int{i, y})
+		if D >= 0 {
+			y = y + 1
+			D = D - dx
+		}
+		D = D + dy
+	}
+	for _, v := range ray {
+		tempU := g.GetUnitOnTile(v[0], v[1])
+		if tempU == t || tempU == u {
+			continue
+		}
+		if tempU.Team != u.Team {
+			vision = false
+		}
+	}
+	return vision
+}
+
 func (g *GameStat) GetUnit(wId string, owner int) *units.Unit {
 	for s := range g.Armies[owner].Squads {
 		for u := range g.Armies[owner].Squads[s].Grunts {
