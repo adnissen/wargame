@@ -6,6 +6,8 @@
   <style type="text/css">
       body {
           margin: 0;
+          background-color: #333;
+          font-family: pixelFont;
       }
       #game {
         position: absolute;
@@ -13,8 +15,33 @@
         left: 0;
       }
 
+      #output {
+        position: absolute;
+        top: 150px;
+        left: 800px;
+        color: white;
+      }
+
+      #hud {
+        position: absolute;
+        top: 700px;
+        left: 0;
+      }
+
       #endturn {
         display: none;
+      }
+
+      #hud-output {
+        color: #FFF;
+        position: absolute;
+        top: 45px;
+        left: 10px;
+      }
+
+      @font-face {
+          font-family: pixelFont;
+          src: url(/public/client/assets/VCR_OSD_MONO_1.001.ttf);
       }
   </style>
 <script>
@@ -24,10 +51,14 @@ window.addEventListener("load", function(evt) {
     var input = document.getElementById("input");
     var ws;
 
-    var print = function(message) {
+    var print = function(message, id) {
         var d = document.createElement("div");
         d.innerHTML = message;
-        output.appendChild(d);
+        if (id) {
+          document.getElementById(id).appendChild(d);
+        } else {
+          output.appendChild(d);
+        }
     };
 
     var clr = function() {
@@ -94,6 +125,13 @@ window.addEventListener("load", function(evt) {
                 }
                 updateMatrix();
                 break;
+              case 'game_use_weapon':
+                var m = JSON.parse(message.Message);
+                var u = unitHash[m.uid];
+                var t = unitHash[m.target];
+
+
+                break;
               case 'game_turn':
                 currentTurn = parseInt(message.Message);
                 clr();
@@ -147,7 +185,7 @@ window.addEventListener("load", function(evt) {
     };
 
     function createGame(){
-      var game = new Phaser.Game(1280, 720, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
+      var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
       //message = JSON.parse(message.Message);
       //game.currentMapData = message.Map;
       window.game = game;
@@ -283,6 +321,7 @@ window.addEventListener("load", function(evt) {
            print("ATK: " + w.Atk);
            print("RNG: " + w.Rng);
            print("DMG: " + w.Dmg);
+           print("hit on: 1d20+" + w.Atk + " > " + self.attributes.Def);
            var useBtn = '<button id="' + w.Uid + '">Use</button>';
            print(useBtn);
            document.getElementById(w.Uid).addEventListener("click", function(){
@@ -372,7 +411,7 @@ window.addEventListener("load", function(evt) {
       this.capturable = params.Capturable || false;
       this.owner = params.Owner || 0;
       if (params.Unit) {
-        this.unit = Params.Unit.Uid;
+        this.unit = params.Unit.Uid;
       }
       this.x = x / TILESIZE;
       this.y = y / TILESIZE;
@@ -567,33 +606,34 @@ window.addEventListener("load", function(evt) {
       if (game.input.activePointer.withinGame)
       {
           game.input.enabled = true;
+          if (game.input.keyboard.isDown(Phaser.Keyboard.W)){
+            game.camera.y -= 5;
+          }
+          if (game.input.keyboard.isDown(Phaser.Keyboard.A)){
+            game.camera.x -= 5;
+          }
+          if (game.input.keyboard.isDown(Phaser.Keyboard.S)){
+            game.camera.y += 5;
+          }
+          if (game.input.keyboard.isDown(Phaser.Keyboard.D)){
+            game.camera.x += 5;
+          }
+
+          if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)){
+            selectedUnit = null;
+            cursor.x = -48;
+            cursor.y = -48;
+            clr();
+            if (myTurn()) print("It is your turn.");
+            else print("It is your opponents turn.");
+          }
       }
       else
       {
           game.input.enabled = false;
       }
 
-      if (game.input.keyboard.isDown(Phaser.Keyboard.W)){
-        game.camera.y -= 5;
-      }
-      if (game.input.keyboard.isDown(Phaser.Keyboard.A)){
-        game.camera.x -= 5;
-      }
-      if (game.input.keyboard.isDown(Phaser.Keyboard.S)){
-        game.camera.y += 5;
-      }
-      if (game.input.keyboard.isDown(Phaser.Keyboard.D)){
-        game.camera.x += 5;
-      }
 
-      if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)){
-        selectedUnit = null;
-        cursor.x = -48;
-        cursor.y = -48;
-        clr();
-        if (myTurn()) print("It is your turn.");
-        else print("It is your opponents turn.");
-      }
     }
 
 });
@@ -615,11 +655,16 @@ You can change the message and send multiple times.
 </form>
 <button id="endturn">End Turn</button>
 </td><td valign="top" width="50%">
-<div id="output"></div>
 <div id="weapons"></div>
 </td></tr></table>
 <div id="game">
 
+</div>
+<div id="output"></div>
+<div id="hud">
+<img src="public/client/assets/hud.png">
+<div id="hud-output"></div>
+</img>
 </div>
 </body>
 </html>

@@ -140,20 +140,21 @@ func (g *GameStat) GetUnitGlobal(wId string) *units.Unit {
 	return nil
 }
 
-func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon, owner int) bool {
+func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon, owner int) (bool, int) {
 	used := false
+	damage := -1
 
 	if w.UsesRemaining <= 0 {
-		return false
+		return false, -1
 	}
 
 	if g.UnitActionCounts[u.Uid.String()] <= 0 {
-		return false
+		return false, -1
 	}
 
 	if w.NoAttack != true {
 		if g.UnitCombatCounts[u.Uid.String()] <= 0 {
-			return false
+			return false, -1
 		}
 	}
 	//pre attack
@@ -162,7 +163,7 @@ func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon,
 	}
 
 	if w.NoAttack != true {
-		used = g.Attack(u, target, w)
+		used, damage = g.Attack(u, target, w)
 	}
 
 	//post attack
@@ -170,16 +171,18 @@ func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon,
 		//use ability here
 	}
 
-	return used
+	return used, damage
 }
 
-func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.Weapon) bool {
+func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.Weapon) (bool, int) {
 	attacked := false
+	damage := -1
 	if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= w.Rng {
 		r := dice.Roll(20)
 		g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
 		if (r + w.Atk) > defender.Attributes.Def {
-			defender.Attributes.Hps -= w.Dmg
+			damage = (w.Dmg - defender.Attributes.Amr)
+			defender.Attributes.Hps = defender.Attributes.Hps - damage
 			if defender.Attributes.Hps <= 0 {
 				delete(g.UnitActionCounts, defender.Uid.String())
 				delete(g.UnitCombatCounts, defender.Uid.String())
@@ -189,7 +192,7 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 		g.UnitActionCounts[attacker.Uid.String()] -= 1
 		attacked = true
 	}
-	return attacked
+	return attacked, damage
 }
 
 func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {

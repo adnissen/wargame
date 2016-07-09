@@ -14,6 +14,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/adnissen/wargame/src/packages/army"
 	"github.com/adnissen/wargame/src/packages/gameclient"
@@ -148,7 +149,20 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(u)
 			fmt.Println(t)
 			fmt.Println(w)
-			g.UseWeapon(u, t, w, g.GetPlayerIndex(newClient))
+			used, damage := g.UseWeapon(u, t, w, g.GetPlayerIndex(newClient))
+			if used == true {
+				ret := map[string]interface{}{
+					"uid":    u.Uid.String(),
+					"weapon": w.Uid.String(),
+					"target": t.Uid.String(),
+					"damage": strconv.Itoa(damage)}
+				str, err := json.Marshal(ret)
+				if err != nil {
+					fmt.Println("Error encoding JSON")
+					return
+				}
+				g.SendMessageToAllPlayers("game_use_weapon", str)
+			}
 		}
 
 		if cm.MessageType == "game_move" {
