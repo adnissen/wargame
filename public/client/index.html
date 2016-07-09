@@ -28,16 +28,30 @@
         left: 0;
       }
 
-      #endturn {
-        display: none;
-      }
-
       #hud-output {
         color: #FFF;
         position: absolute;
         top: 45px;
         left: 10px;
       }
+
+      #weapons-hud {
+        position: absolute;
+        top: 550px;
+        left: 800px;
+      }
+
+      #weapons-output {
+        position: absolute;
+        top: 20px;
+        left: 10px;
+        color: white;
+      }
+
+      #endturn {
+        display: none;
+      }
+
 
       #stat-output {
         color: #FFF;
@@ -111,6 +125,7 @@ window.addEventListener("load", function(evt) {
                 loadMap(message);
                 break;
               case 'game_start_army_data':
+                //window.game.stage.disableVisibilityChange = true;
                 var m = JSON.parse(message.Message);
                 console.log(m);
                 loadUnits(m);
@@ -123,8 +138,15 @@ window.addEventListener("load", function(evt) {
                 u.x = m.moves[m.moves.length - 1][0];
                 u.y = m.moves[m.moves.length - 1][1];
                 tileArray[u.x][u.y].unit = u.uid;
-                u.sprite.x = u.x * TILESIZE;
-                u.sprite.y = u.y * TILESIZE;
+                //u.sprite.x = u.x * TILESIZE;
+                //u.sprite.y = u.y * TILESIZE;
+                var timer = setInterval(function(){
+                  if (!activeMove.path && !activeMove.unit){
+                    activeMove.path = m.moves;
+                    activeMove.unit = u;
+                    clearTimeout(timer);
+                  }
+                }, 100)
                 u.actionCount = u.actionCount - 1;
                 if (u.actionCount <= 0) {
                   u.combatCount = 0;
@@ -233,6 +255,7 @@ window.addEventListener("load", function(evt) {
     var cursor = null;
     var selectedUnit = null;
     var mapMatrix = null;
+    var activeMove = {};
     var weaponsUi = document.getElementById("weapons");
 
     function myTurn() {
@@ -311,8 +334,9 @@ window.addEventListener("load", function(evt) {
 
      self.showInfo = function(){
        clr();
-       clr('hud-output')
-       clr('stat-output')
+       clr('hud-output');
+       clr('stat-output');
+       clr('weapons-output');
        if (myTeam == self.team)
          print("friendly " + self.displayName, 'hud-output');
        else
@@ -326,30 +350,30 @@ window.addEventListener("load", function(evt) {
        print("defense: " + self.attributes.Def, 'stat-output');
        print("armor: " + self.attributes.Amr, 'stat-output');
 
-       print("weapons:");
-       print("");
+       print("weapons:", "weapons-output");
+       print("", "weapons-output");
        self.attributes.Weapons.forEach(function(w){
-         print("------------");
-         print(w.DisplayName);
-         print("Durability: " + w.UsesRemaining);
-         print("ATK: " + w.Atk);
-         print("RNG: " + w.Rng);
-         print("DMG: " + w.Dmg);
-         print("------------");
+         print("------------", "weapons-output");
+         print(w.DisplayName, "weapons-output");
+         print("Durability: " + w.UsesRemaining, "weapons-output");
+         print("ATK: " + w.Atk, "weapons-output");
+         print("RNG: " + w.Rng, "weapons-output");
+         print("DMG: " + w.Dmg, "weapons-output");
+         print("------------", "weapons-output");
        })
 
        if (myTurn() && myTeam != self.team && selectedUnit && selectedUnit.team === myTeam && selectedUnit.combatCount > 0) {
          selectedUnit.attributes.Weapons.forEach(function(w){
-           print("ATTACK with:");
-           print("------------");
-           print(w.DisplayName);
-           print("Durability: " + w.UsesRemaining);
-           print("ATK: " + w.Atk);
-           print("RNG: " + w.Rng);
-           print("DMG: " + w.Dmg);
-           print("hit on: 1d20+" + w.Atk + " > " + self.attributes.Def);
+           print("ATTACK with:", "weapons-output");
+           print("------------", "weapons-output");
+           print(w.DisplayName), "weapons-output";
+           print("Durability: " + w.UsesRemaining, "weapons-output");
+           print("ATK: " + w.Atk, "weapons-output");
+           print("RNG: " + w.Rng, "weapons-output");
+           print("DMG: " + w.Dmg, "weapons-output");
+           print("hit on: 1d20+" + w.Atk + " > " + self.attributes.Def, "weapons-output");
            var useBtn = '<button id="' + w.Uid + '">Use</button>';
-           print(useBtn);
+           print(useBtn, "weapons-output");
            document.getElementById(w.Uid).addEventListener("click", function(){
              var ret = {};
              ret.messageType = "game_use_weapon";
@@ -361,7 +385,7 @@ window.addEventListener("load", function(evt) {
              ws.send(JSON.stringify(ret));
              console.log("attacked with weapon " + w.Uid);
            });
-           print("------------");
+           print("------------", "weapons-output");
          })
        }
      }
@@ -598,6 +622,7 @@ window.addEventListener("load", function(evt) {
 
       game.world.scale.set(1);
       game.camera.bounds = undefined;
+      game.stage.disableVisibilityChange = true;
     }
 
     function exportMap(){
@@ -629,6 +654,33 @@ window.addEventListener("load", function(evt) {
     }
 
     function update() {
+      if (activeMove.unit && activeMove.path) {
+        if (activeMove.currentDest) {
+          if (activeMove.unit.sprite.x < (activeMove.currentDest[0] * TILESIZE)) {
+            activeMove.unit.sprite.x += 3;
+          }
+          if (activeMove.unit.sprite.x > (activeMove.currentDest[0] * TILESIZE)) {
+            activeMove.unit.sprite.x -= 3;
+          }
+
+          if (activeMove.unit.sprite.y < (activeMove.currentDest[1] * TILESIZE)) {
+            activeMove.unit.sprite.y += 3;
+          }
+          if (activeMove.unit.sprite.y > (activeMove.currentDest[1] * TILESIZE)) {
+            activeMove.unit.sprite.y -= 3;
+          }
+
+          if (activeMove.unit.sprite.x == (activeMove.currentDest[0] * TILESIZE) && activeMove.unit.sprite.y == (activeMove.currentDest[1] * TILESIZE)){
+            activeMove.currentIndex += 1;
+            if (activeMove.path[activeMove.currentIndex]) activeMove.currentDest = activeMove.path[activeMove.currentIndex];
+            else activeMove = {};
+          }
+        } else {
+          activeMove.currentDest = activeMove.path[0];
+          activeMove.currentIndex = 0;
+          console.log("setting destination to " + activeMove.currentDest)
+        }
+      }
       if (game.input.activePointer.withinGame)
       {
           game.input.enabled = true;
@@ -692,6 +744,11 @@ You can change the message and send multiple times.
 <div id="hud-output"></div>
 <div id="stat-output"></div>
 </img>
+</div>
+<div id="weapons-hud">
+  <img src="public/client/assets/weaponshud.png">
+  <div id="weapons-output"></div>
+  </img>
 </div>
 </body>
 </html>
