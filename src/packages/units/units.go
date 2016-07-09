@@ -66,8 +66,8 @@ func (u *Unit) SetPos(x int, y int) {
 }
 
 func LoadWeapons() {
-	WeaponList[0] = Weapon{Id: 0, DisplayName: "Longbow", Key: "longbow", Rng: 5, Atk: 1, Dmg: 3, Uses: 20, UsesRemaining: 20}
-	WeaponList[1] = Weapon{Id: 1, DisplayName: "Longbow 2", Key: "longbow", Rng: 5, Atk: 1, Dmg: 3, Uses: 20, UsesRemaining: 20}
+	WeaponList[0] = Weapon{Id: 0, DisplayName: "Longbow", Key: "longbow", Rng: 5, Atk: 10, Dmg: 3, Uses: 20, UsesRemaining: 20}
+	WeaponList[1] = Weapon{Id: 1, DisplayName: "Longbow 2", Key: "longbow", Rng: 5, Atk: 10, Dmg: 3, Uses: 20, UsesRemaining: 20}
 }
 
 func LoadUnits() {

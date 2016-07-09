@@ -1,7 +1,12 @@
 package dice
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 func Roll(sides int) int {
-	return (rand.Intn(sides-1) + 1)
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+	return (r1.Intn(sides-1) + 1)
 }

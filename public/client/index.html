@@ -39,6 +39,13 @@
         left: 10px;
       }
 
+      #stat-output {
+        color: #FFF;
+        position: absolute;
+        top: 45px;
+        left: 250px;
+      }
+
       @font-face {
           font-family: pixelFont;
           src: url(/public/client/assets/VCR_OSD_MONO_1.001.ttf);
@@ -55,14 +62,19 @@ window.addEventListener("load", function(evt) {
         var d = document.createElement("div");
         d.innerHTML = message;
         if (id) {
-          document.getElementById(id).appendChild(d);
+          var o = document.getElementById(id);
+          o.appendChild(d);
         } else {
           output.appendChild(d);
         }
     };
 
-    var clr = function() {
-        output.innerHTML = '';
+    var clr = function(id) {
+      if (id) {
+        var o = document.getElementById(id);
+        o.innerHTML = '';
+      }
+      else output.innerHTML = '';
     };
 
     document.getElementById("open").onclick = function(evt) {
@@ -129,8 +141,17 @@ window.addEventListener("load", function(evt) {
                 var m = JSON.parse(message.Message);
                 var u = unitHash[m.uid];
                 var t = unitHash[m.target];
-
-
+                var damage = m.damage;
+                u.actionCount = u.actionCount - 1;
+                u.combatCount = u.combatCount - 1;
+                if (u.actionCount <= 0) {
+                  u.combatCount = 0;
+                  u.sprite.tint = 0x333333;
+                }
+                if (damage > 0) {
+                  t.attributes.Hps = t.attributes.Hps - damage;
+                }
+                selectedUnit.showInfo();
                 break;
               case 'game_turn':
                 currentTurn = parseInt(message.Message);
@@ -269,6 +290,7 @@ window.addEventListener("load", function(evt) {
       this.team = params.team;
       this.key = key + "_" + this.color;
       this.sprite = game.add.sprite(x, y, this.key);
+      this.displayName = params.DisplayName;
       this.sprite.inputEnabled = true;
       this.owner = params.Owner || 0;
       this.x = x / TILESIZE;
@@ -289,16 +311,20 @@ window.addEventListener("load", function(evt) {
 
      self.showInfo = function(){
        clr();
+       clr('hud-output')
+       clr('stat-output')
        if (myTeam == self.team)
-         print("friendly unit: " + self.uid);
+         print("friendly " + self.displayName, 'hud-output');
        else
-         print("enemy unit: " + self.uid);
+         print("enemy " + self.displayName, 'hud-output');
        if (self.leader) print("LEADER")
-       print("remaining actions: " + self.actionCount);
-       print("remaining combat actions: " + self.combatCount);
-       print("x: " + self.x + " y: " + self.y);
-       print("team: " + self.color);
-       print("attributes: " + JSON.stringify(self.attributes));
+       print("remaining actions: " + self.actionCount, 'hud-output');
+       print("remaining attacks: " + self.combatCount, 'hud-output');
+       print("team: " + self.color, 'hud-output');
+       print("hitpoints: " + self.attributes.Hps, 'stat-output');
+       print("speed: " + self.attributes.Hps, 'stat-output');
+       print("defense: " + self.attributes.Def, 'stat-output');
+       print("armor: " + self.attributes.Amr, 'stat-output');
 
        print("weapons:");
        print("");
@@ -664,6 +690,7 @@ You can change the message and send multiple times.
 <div id="hud">
 <img src="public/client/assets/hud.png">
 <div id="hud-output"></div>
+<div id="stat-output"></div>
 </img>
 </div>
 </body>
