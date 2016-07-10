@@ -156,6 +156,8 @@ window.addEventListener("load", function(evt) {
                   cursor.x = u.x * TILESIZE;
                   cursor.y = u.y * TILESIZE;
                   u.showInfo();
+                  DeselectRange();
+                  u.showRange();
                 }
                 updateMatrix();
                 break;
@@ -172,6 +174,9 @@ window.addEventListener("load", function(evt) {
                 }
                 if (damage > 0) {
                   t.attributes.Hps = t.attributes.Hps - damage;
+                  if (t.attributes.Hps <= 0) {
+                    t.sprite.destroy();
+                  }
                 }
                 selectedUnit.showInfo();
                 break;
@@ -238,6 +243,7 @@ window.addEventListener("load", function(evt) {
 
 
     var tileArray = [[]];
+    var overlayArray = null;
     var unitHash = {};
     var selectedTile = 1;
     var TILESIZE = 48;
@@ -300,6 +306,9 @@ window.addEventListener("load", function(evt) {
       game.load.image('tile_outline', '/public/client/assets/sprites/tiles/tile_outline.png');
       game.load.image('tile_outline_red', '/public/client/assets/sprites/tiles/tile_outline_red.png');
       game.load.image('tile_outline_blue', '/public/client/assets/sprites/tiles/tile_outline_blue.png');
+      game.load.image('red_overlay', '/public/client/assets/sprites/tiles/red_overlay.png');
+      game.load.image('purple_overlay', '/public/client/assets/sprites/tiles/purple_overlay.png');
+      game.load.image('blue_overlay', '/public/client/assets/sprites/tiles/blue_overlay.png');
       game.load.image('grass1', '/public/client/assets/sprites/tiles/grass1.png');
       game.load.image('mountain1', '/public/client/assets/sprites/tiles/mountain1.png');
       game.load.image('water1', '/public/client/assets/sprites/tiles/water1.png');
@@ -372,6 +381,21 @@ window.addEventListener("load", function(evt) {
       }
     }
 
+    var DeselectRange = function(){
+      if (overlayArray) {
+        var w = overlayArray.length;
+        var h = overlayArray[0].length;
+        for (var i = 0; i < w; i++) {
+          for (var k = 0; k < h; k++) {
+            if (overlayArray[i][k]) {
+              overlayArray[i][k].destroy();
+            }
+          }
+        }
+      }
+      overlayArray = null;
+    }
+
     var Unit = function(x, y, key, params){
       if (params) {
         x = params.X * TILESIZE;
@@ -400,7 +424,65 @@ window.addEventListener("load", function(evt) {
 
       this.sprite.events.onInputDown.add(function(){
         self.showInfo();
+        DeselectRange();
+        self.showRange();
       });
+
+     self.distanceToTile = function(x, y) {
+       return Math.abs(self.x - x) + Math.abs(self.y - y);
+     }
+
+     self.showRange = function(){
+       //first and foremost, if a unit doesn't have any more actions, we don't need to do any of this
+       if (self.actionCount <= 0) {
+         return;
+       }
+       var maxAttackRange = 1;
+       self.attributes.Weapons.forEach(function(w){
+         if (w.Rng > maxAttackRange) maxAttackRange = w.Rng;
+       })
+       console.log("MAX ATTACK RANGE: " + maxAttackRange)
+       var w = tileArray.length;
+       var h = tileArray[0].length;
+       overlayArray = new Array(w);
+       for (var i = 0; i < w; i++) {
+         overlayArray[i] = new Array(h);
+         for (var k = 0; k < h; k++) {
+           //this is all disgusting, so let me break it down for you
+
+           //right at the start for every tile it falls into one of two categories: within our speed, and outside of it
+           if (self.distanceToTile(i, k) <= self.attributes.Spd) {
+             //once we know we have the speed to get to the tile, we need to make sure there is a valid path there, using pathfinding
+             var grid = newMatrix();
+             var finder = new PF.AStarFinder();
+             var path = finder.findPath(self.x, self.y, tileArray[i][k].x, tileArray[i][k].y, grid);
+             if (tileArray[i][k].walkable && !tileArray[i][k].unit && path.length != 0 && path.length - 1 <= self.attributes.Spd) {
+               //if there's a valid path, it's a nice blue overlay
+               overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'blue_overlay');
+               overlayArray[i][k].alpha = 0.5;
+             }
+           }
+           //this little math just means:
+           //if I moved with my first action, I could hit a red tile with my second (with at least one of my weapons)
+           if (self.combatCount > 0){ //of course, they actually need to have combat actions left
+             if (self.actionCount > 1) { //they also can't move and attack if there's only one action left, so red means nothing too
+               if ((self.distanceToTile(i, k) - maxAttackRange) <= self.attributes.Spd && self.distanceToTile(i, k) > self.attributes.Spd) {
+                 if (overlayArray[i][k]) overlayArray[i][k].destroy();
+                 overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
+                 overlayArray[i][k].alpha = 0.5;
+               }
+             }
+             //sometimes, we can't move right up next to them, but we can still hit them right now
+             //that's purple
+             if (self.distanceToTile(i, k) <= maxAttackRange && tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team != myTeam) {
+               if (overlayArray[i][k]) overlayArray[i][k].destroy()
+               overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'purple_overlay');
+               overlayArray[i][k].alpha = 0.5;
+             }
+           }
+         }
+       }
+     }
 
      self.showInfo = function(){
        clr();
@@ -679,9 +761,6 @@ window.addEventListener("load", function(evt) {
       var h = mapAry[0].length;
       for (var i = 0; i < w; i++) {
         for (var k = 0; k < h; k++) {
-          if (i == 4 && k == 7) {
-            debugger;
-          }
           t = mapAry[i][k];
           mapAry[i][k] = new MapTile(0, 0, '', t);
         }
@@ -790,6 +869,7 @@ window.addEventListener("load", function(evt) {
           }
 
           if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)){
+            DeselectRange();
             selectedUnit = null;
             cursor.x = -48;
             cursor.y = -48;
