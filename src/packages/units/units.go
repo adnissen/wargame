@@ -30,6 +30,7 @@ type Squad struct {
 	GruntIds    []int
 	Grunts      []Unit
 	Cost        int
+	Factions    []int
 }
 
 type UnitAttributes struct {
@@ -56,9 +57,9 @@ type Weapon struct {
 	AbilityName   string
 }
 
-var UnitList = make([]Unit, 4)
+var UnitList = make([]Unit, 5)
 var SquadList = make([]Squad, 2)
-var WeaponList = make([]Weapon, 2)
+var WeaponList = make([]Weapon, 3)
 
 func (u *Unit) SetPos(x int, y int) {
 	u.X = x
@@ -66,22 +67,24 @@ func (u *Unit) SetPos(x int, y int) {
 }
 
 func LoadWeapons() {
-	WeaponList[0] = Weapon{Id: 0, DisplayName: "Longbow", Key: "longbow", Rng: 5, Atk: 10, Dmg: 3, Uses: 20, UsesRemaining: 20}
-	WeaponList[1] = Weapon{Id: 1, DisplayName: "Longbow 2", Key: "longbow", Rng: 5, Atk: 10, Dmg: 3, Uses: 20, UsesRemaining: 20}
+	WeaponList[0] = Weapon{Id: 0, DisplayName: "Longbow", Key: "longbow", Rng: 5, Atk: 13, Dmg: 10, Uses: 99, UsesRemaining: 99}
+	WeaponList[1] = Weapon{Id: 1, DisplayName: "Longbow 2", Key: "longbow", Rng: 5, Atk: 10, Dmg: 3, Uses: 99, UsesRemaining: 99}
+	WeaponList[2] = Weapon{Id: 2, DisplayName: "Short Sword", Key: "short_sword", Rng: 1, Atk: 5, Dmg: 10, Uses: 99, UsesRemaining: 99}
 }
 
 func LoadUnits() {
 	//BE CAREFUL ABOUT CHANGING THIS!!
-	UnitList[0] = Unit{Id: 0, Key: "bromuk", DisplayName: "Bromuk", Description: "A fearless Leader, loved by friends and hated by the rest.", Attributes: UnitAttributes{Def: 18, Amr: 2, Spd: 5, Hps: 15, WeaponIds: []int{1}}, CardText: "*Defensive Line*: "}
-	UnitList[1] = Unit{Id: 1, Key: "stout_guard", DisplayName: "Stout Guard", Description: "You should be able to strike him down in one hit. If you can get past his shield.", Attributes: UnitAttributes{Def: 20, Amr: 0, Spd: 3, Hps: 4, WeaponIds: []int{1}}}
+	UnitList[0] = Unit{Id: 0, Key: "stout_guard", DisplayName: "Bromuk", Description: "", Attributes: UnitAttributes{Def: 18, Amr: 2, Spd: 5, Hps: 15, WeaponIds: []int{2}}, CardText: "*Defensive Line*: "}
+	UnitList[4] = Unit{Id: 4, Key: "stout_guard", DisplayName: "Man-At-Arms", Description: "", Attributes: UnitAttributes{Def: 15, Amr: 0, Spd: 5, Hps: 10, WeaponIds: []int{2}}}
+	UnitList[1] = Unit{Id: 1, Key: "stout_guard", DisplayName: "Stout Guard", Description: "", Attributes: UnitAttributes{Def: 20, Amr: 0, Spd: 5, Hps: 4, WeaponIds: []int{2}}}
 
-	UnitList[2] = Unit{Id: 2, Key: "corath", DisplayName: "Corath", Description: "", Attributes: UnitAttributes{Def: 14, Amr: 2, Spd: 6, Hps: 15, WeaponIds: []int{1}}}
-	UnitList[3] = Unit{Id: 3, Key: "mysterious_archer", DisplayName: "Mysterious Archer", Description: "", Attributes: UnitAttributes{Def: 14, Amr: 0, Spd: 4, Hps: 8, WeaponIds: []int{1}}}
+	UnitList[2] = Unit{Id: 2, Key: "archerguy", DisplayName: "Corath", Description: "", Attributes: UnitAttributes{Def: 15, Amr: 2, Spd: 6, Hps: 15, WeaponIds: []int{0}}}
+	UnitList[3] = Unit{Id: 3, Key: "archerguy", DisplayName: "Mysterious Archer", Description: "", Attributes: UnitAttributes{Def: 15, Amr: 0, Spd: 6, Hps: 10, WeaponIds: []int{0}}}
 }
 
 func LoadSquads() {
-	SquadList[0] = Squad{Id: 0, Cost: 5, DisplayName: "Bromuk's Defenders", LeaderId: 0, GruntIds: []int{1, 1, 1}}
-	SquadList[1] = Squad{Id: 1, Cost: 5, DisplayName: "Corath's Rangers", LeaderId: 2, GruntIds: []int{3, 3, 3}}
+	SquadList[0] = Squad{Id: 0, Cost: 15, DisplayName: "Bromuk's Defenders", LeaderId: 0, GruntIds: []int{4, 4, 4}, Factions: []int{0, 1}}
+	SquadList[1] = Squad{Id: 1, Cost: 20, DisplayName: "Corath's Rangers", LeaderId: 2, GruntIds: []int{3, 3}, Factions: []int{0, 1}}
 }
 
 func GetUnit(id int) Unit {
@@ -92,8 +95,9 @@ func GetUnit(id int) Unit {
 func CreateUnit(id int) Unit {
 	ret := UnitList[id]
 	ret.Uid = uuid.NewV4()
-	for w := range ret.Attributes.WeaponIds {
+	for _, w := range ret.Attributes.WeaponIds {
 		nw := WeaponList[w]
+		fmt.Println(nw.DisplayName)
 		nw.Uid = uuid.NewV4()
 		ret.Attributes.Weapons = append(ret.Attributes.Weapons, nw)
 	}

@@ -178,6 +178,7 @@ window.addEventListener("load", function(evt) {
                     t.sprite.destroy();
                   }
                 }
+                tileArray[t.X][t.Y].tile = null;
                 selectedUnit.showInfo();
                 break;
               case 'game_turn':
@@ -315,9 +316,14 @@ window.addEventListener("load", function(evt) {
       game.load.image('castle1', '/public/client/assets/sprites/tiles/castle1.png');
       game.load.image('blank', '/public/client/assets/sprites/tiles/blank.png');
       game.load.image('rock1', '/public/client/assets/sprites/tiles/rock1.png');
+
+      //units
       game.load.image('archerguy_red', '/public/client/assets/sprites/units/archerguy_red.png');
       game.load.image('archerguy_blue', '/public/client/assets/sprites/units/archerguy_blue.png');
+      game.load.image('stout_guard_blue', '/public/client/assets/sprites/units/stout_guard_blue.png');
+      game.load.image('stout_guard_red', '/public/client/assets/sprites/units/stout_guard_red.png');
 
+      //tiles
       game.load.image('river1', '/public/client/assets/sprites/tiles/river1.png');
       game.load.image('river2', '/public/client/assets/sprites/tiles/river2.png');
       game.load.image('river3', '/public/client/assets/sprites/tiles/river3.png');
@@ -484,6 +490,8 @@ window.addEventListener("load", function(evt) {
        }
      }
 
+     self.notifyAnimation = function(key, color){}
+
      self.showInfo = function(){
        clr();
        clr('hud-output');
@@ -579,13 +587,13 @@ window.addEventListener("load", function(evt) {
           for (var l = 0; l < ary[i].Squads[k].Grunts.length; l++) {
             var u = ary[i].Squads[k].Grunts[l];
             u.team = i;
-            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'archerguy', u);
+            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, u.Key, u);
           }
           if (ary[i].Squads[k].Leader) {
             var u = ary[i].Squads[k].Leader;
             u.team = i;
             u.leader = true;
-            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, 'archerguy', u);
+            unitHash[u.Uid] = new Unit(u.X * TILESIZE, u.Y * TILESIZE, u.Key, u);
           }
         }
       }

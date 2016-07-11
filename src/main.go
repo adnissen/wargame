@@ -82,7 +82,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			reverse(a)
 	*/
 
-	newA := army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(0), units.CreateSquad(0)}}
+	newA := army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(1), units.CreateSquad(0)}}
 	for k := range newA.Squads {
 		for u := range newA.Squads[k].Grunts {
 			fmt.Println(newA.Squads[k].Grunts[u].Uid)
@@ -210,12 +210,12 @@ func main() {
 	flag.Parse()
 	log.SetFlags(0)
 
+	units.LoadWeapons()
+	log.Println("Loaded Weapons")
 	units.LoadUnits()
 	log.Println("Loaded Units")
 	units.LoadSquads()
 	log.Println("Loaded Squads")
-	units.LoadWeapons()
-	log.Println("Loaded Weapons")
 	gamemap.LoadMaps()
 	log.Println("Loaded Maps")
 
