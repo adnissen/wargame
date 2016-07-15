@@ -172,13 +172,19 @@ window.addEventListener("load", function(evt) {
                   u.combatCount = 0;
                   u.sprite.tint = 0x333333;
                 }
+                var style = { font: "32px pixelFont", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
                 if (damage > 0) {
+                  style.fill = "red"
+                  var text = damage;
                   t.attributes.Hps = t.attributes.Hps - damage;
                   if (t.attributes.Hps <= 0) {
                     t.sprite.destroy();
+                    tileArray[t.X][t.Y].tile = null;
                   }
+                } else {
+                  var text = "Miss!";
                 }
-                tileArray[t.X][t.Y].tile = null;
+                activeNotifications.push(game.add.text(t.sprite.x, t.sprite.y, text, style))
                 selectedUnit.showInfo();
                 break;
               case 'game_turn':
@@ -246,6 +252,7 @@ window.addEventListener("load", function(evt) {
     var tileArray = [[]];
     var overlayArray = null;
     var unitHash = {};
+    var activeNotifications = [];
     var selectedTile = 1;
     var TILESIZE = 48;
     var key1;
@@ -833,6 +840,14 @@ window.addEventListener("load", function(evt) {
     }
 
     function update() {
+      for (var i = 0; i < activeNotifications.length; i++) {
+        activeNotifications[i].y -= 2;
+        activeNotifications[i].alpha -= 0.025;
+        if (activeNotifications[i].alpha <= 0) {
+          activeNotifications[i].destroy();
+          activeNotifications.splice(i, 1);
+        }
+      }
       if (activeMove.unit && activeMove.path) {
         if (activeMove.currentDest) {
           if (activeMove.unit.sprite.x < (activeMove.currentDest[0] * TILESIZE)) {
