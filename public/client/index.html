@@ -105,7 +105,6 @@ window.addEventListener("load", function(evt) {
             ws = null;
         }
         ws.onmessage = function(evt) {
-            print("RESPONSE: " + evt.data);
             console.log(JSON.parse(evt.data));
             var message = JSON.parse(evt.data);
             switch (message.MessageType) {
@@ -168,28 +167,31 @@ window.addEventListener("load", function(evt) {
                 var damage = m.damage;
                 u.actionCount = u.actionCount - 1;
                 u.combatCount = u.combatCount - 1;
+
                 if (u.actionCount <= 0) {
                   u.combatCount = 0;
                   u.sprite.tint = 0x333333;
                 }
                 var style = { font: "32px pixelFont", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+                var txtX = t.sprite.x + 16;
+                var txtY = t.sprite.y;
                 if (damage > 0) {
                   style.fill = "red"
-                  var text = damage;
+                  var text = "-" + damage;
                   t.attributes.Hps = t.attributes.Hps - damage;
                   if (t.attributes.Hps <= 0) {
                     t.sprite.destroy();
                     tileArray[t.X][t.Y].tile = null;
                   }
                 } else {
-                  var text = "Miss!";
+                  var text = "miss!";
                 }
-                activeNotifications.push(game.add.text(t.sprite.x, t.sprite.y, text, style))
+                var obj = game.add.text(txtX, txtY, text, style);
+                activeNotifications.push(obj);
                 selectedUnit.showInfo();
                 break;
               case 'game_turn':
                 currentTurn = parseInt(message.Message);
-                clr();
                 var btn = document.getElementById('endturn');
                 if (myTurn()) {
                   btn.style.display = 'block'
@@ -500,7 +502,6 @@ window.addEventListener("load", function(evt) {
      self.notifyAnimation = function(key, color){}
 
      self.showInfo = function(){
-       clr();
        clr('hud-output');
        clr('stat-output');
        clr('weapons-output');
@@ -508,7 +509,7 @@ window.addEventListener("load", function(evt) {
          print("friendly " + self.displayName, 'hud-output');
        else
          print("enemy " + self.displayName, 'hud-output');
-       if (self.leader) print("LEADER")
+       if (self.leader) print("LEADER", 'hud-output');
        print("remaining actions: " + self.actionCount, 'hud-output');
        print("remaining attacks: " + self.combatCount, 'hud-output');
        print("team: " + self.color, 'hud-output');
@@ -533,7 +534,7 @@ window.addEventListener("load", function(evt) {
          selectedUnit.attributes.Weapons.forEach(function(w){
            print("ATTACK with:", "weapons-output");
            print("------------", "weapons-output");
-           print(w.DisplayName), "weapons-output";
+           print(w.DisplayName, "weapons-output");
            print("Durability: " + w.UsesRemaining, "weapons-output");
            print("ATK: " + w.Atk, "weapons-output");
            print("RNG: " + w.Rng, "weapons-output");
@@ -896,7 +897,6 @@ window.addEventListener("load", function(evt) {
             selectedUnit = null;
             cursor.x = -48;
             cursor.y = -48;
-            clr();
             if (myTurn()) print("It is your turn.");
             else print("It is your opponents turn.");
           }
