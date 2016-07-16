@@ -502,9 +502,13 @@ window.addEventListener("load", function(evt) {
 
                  goodTiles.forEach(function(t) {
                    if (t.distanceToTile(i, k) <= maxAttackRange){
-                     if (!overlayArray[i][k]) {
-                       console.log("tile in range!");
-
+                     var eligible = true;
+                     if (tileArray[i][k].unit) {
+                       if (unitHash[tileArray[i][k].unit].team == myTeam) eligible = false;
+                     }
+                     if (tileArray[i][k].blocksVision) eligible = false;
+                     if (maxAttackRange <= 1 && !tileArray[i][k].walkable) eligible = false;
+                     if (!overlayArray[i][k] && eligible) {
                         overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
                         overlayArray[i][k].alpha = 0.5;
                      }
