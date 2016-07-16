@@ -167,11 +167,12 @@ window.addEventListener("load", function(evt) {
                 var damage = m.damage;
                 var roll = m.roll;
                 var weapon;
-                u.attributes.Weapons.forEach(function(w){
-                  if (w.Uid === m.weapon) {
-                    weapon = w;
+                for (var i = 0; i < u.attributes.Weapons.length; i++) {
+                  if (m.weapon === u.attributes.Weapons[i].Uid) {
+                    weapon = u.attributes.Weapons[i];
                   }
-                })
+                }
+                weapon.UsesRemaining -= 1;
                 print(u.displayName + " rolls " + roll + "(+" + weapon.Atk + ") against " + t.displayName + "(" + t.attributes.Def + ")!");
                 u.actionCount = u.actionCount - 1;
                 u.combatCount = u.combatCount - 1;
@@ -191,7 +192,7 @@ window.addEventListener("load", function(evt) {
                   if (t.attributes.Hps <= 0) {
                     print(t.displayName + " has died.");
                     t.sprite.destroy();
-                    tileArray[t.X][t.Y].tile = null;
+                    tileArray[t.x][t.y].unit = null;
                   }
                 } else {
                   print("miss!");
