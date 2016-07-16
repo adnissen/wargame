@@ -126,16 +126,24 @@ window.addEventListener("load", function(evt) {
                 //alert(message.Message);
                 break;
               case 'map_data':
-                clearMap();
-                inGame = true;
-                loadMap(message);
+                var t = setInterval(function(){
+                  if (!fullyLoaded) return;
+                  clearMap();
+                  inGame = true;
+                  loadMap(message);
+                  clearInterval(t);
+                }, 100)
                 break;
               case 'game_start_army_data':
                 //window.game.stage.disableVisibilityChange = true;
-                var m = JSON.parse(message.Message);
-                console.log(m);
-                loadUnits(m);
-                cursor = game.add.sprite(0, 0, 'tile_outline_' + myColor);
+                var t = setInterval(function(){
+                  if (!fullyLoaded) return;
+                  var m = JSON.parse(message.Message);
+                  console.log(m);
+                  loadUnits(m);
+                  cursor = game.add.sprite(0, 0, 'tile_outline_' + myColor);
+                  clearInterval(t);
+                }, 100);
                 break;
               case 'game_move':
                 var m = JSON.parse(message.Message);
@@ -291,6 +299,7 @@ window.addEventListener("load", function(evt) {
     var selectedUnit = null;
     var mapMatrix = null;
     var activeMove = {};
+    var fullyLoaded = false;
     var weaponsUi = document.getElementById("weapons");
 
     function myTurn() {
@@ -331,6 +340,10 @@ window.addEventListener("load", function(evt) {
     }
 
     function preload() {
+      game.load.onLoadComplete.add(function(){
+        fullyLoaded = true;
+        console.log("loaded: " + fullyLoaded);
+      }, this);
       //
       game.load.image('tile_outline', '/public/client/assets/sprites/tiles/tile_outline.png');
       game.load.image('tile_outline_red', '/public/client/assets/sprites/tiles/tile_outline_red.png');
@@ -340,6 +353,7 @@ window.addEventListener("load", function(evt) {
       game.load.image('blue_overlay', '/public/client/assets/sprites/tiles/blue_overlay.png');
       game.load.image('grass1', '/public/client/assets/sprites/tiles/grass1.png');
       game.load.image('mountain1', '/public/client/assets/sprites/tiles/mountain1.png');
+      game.load.image('forest1', '/public/client/assets/sprites/tiles/forest1.png');
       game.load.image('water1', '/public/client/assets/sprites/tiles/water1.png');
       game.load.image('castle1', '/public/client/assets/sprites/tiles/castle1.png');
       game.load.image('blank', '/public/client/assets/sprites/tiles/blank.png');
@@ -745,6 +759,11 @@ window.addEventListener("load", function(evt) {
               self.spawnTeam = 1;
               self.spawn = true;
               break;
+            case 7:
+              updateTexture('forest1', 2);
+              self.walkable = true;
+              self.tileType = 'forest';
+              self.blocksVision = true;
             default:
               break;
           }
@@ -764,7 +783,9 @@ window.addEventListener("load", function(evt) {
           selectedTile = 2;
           break;
         case 'Digit3':
-          selectedTile = 3;
+          if (selectedTile == 3) selectedTile = 7;
+          else if (selectedTile == 7) selectedTile = 3;
+          else selectedTile = 3;
           break;
         case 'Digit4':
           selectedTile = 4;
@@ -833,6 +854,8 @@ window.addEventListener("load", function(evt) {
 
     function create() {
       //tileArray = createMapArray(30, 25);
+
+
       key1 = game.input.keyboard.addKey(Phaser.Keyboard.ONE);
       key1.onDown.add(updateSelectedTile, this);
       key2 = game.input.keyboard.addKey(Phaser.Keyboard.TWO);
