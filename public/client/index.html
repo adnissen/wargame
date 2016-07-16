@@ -165,6 +165,14 @@ window.addEventListener("load", function(evt) {
                 var u = unitHash[m.uid];
                 var t = unitHash[m.target];
                 var damage = m.damage;
+                var roll = m.roll;
+                var weapon;
+                u.attributes.Weapons.forEach(function(w){
+                  if (w.Uid === m.weapon) {
+                    weapon = w;
+                  }
+                })
+                print(u.displayName + " rolls " + roll + "(+" + weapon.Atk + ") against " + t.displayName + "(" + t.attributes.Def + ")!");
                 u.actionCount = u.actionCount - 1;
                 u.combatCount = u.combatCount - 1;
 
@@ -176,14 +184,17 @@ window.addEventListener("load", function(evt) {
                 var txtX = t.sprite.x + 16;
                 var txtY = t.sprite.y;
                 if (damage > 0) {
+                  print("Hit for " + damage + "!");
                   style.fill = "red"
                   var text = "-" + damage;
                   t.attributes.Hps = t.attributes.Hps - damage;
                   if (t.attributes.Hps <= 0) {
+                    print(t.displayName + " has died.");
                     t.sprite.destroy();
                     tileArray[t.X][t.Y].tile = null;
                   }
                 } else {
+                  print("miss!");
                   var text = "miss!";
                 }
                 var obj = game.add.text(txtX, txtY, text, style);
@@ -460,6 +471,7 @@ window.addEventListener("load", function(evt) {
        var w = tileArray.length;
        var h = tileArray[0].length;
        overlayArray = new Array(w);
+       var goodTiles = [];
        for (var i = 0; i < w; i++) {
          overlayArray[i] = new Array(h);
          for (var k = 0; k < h; k++) {
@@ -475,17 +487,30 @@ window.addEventListener("load", function(evt) {
                //if there's a valid path, it's a nice blue overlay
                overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'blue_overlay');
                overlayArray[i][k].alpha = 0.5;
+               goodTiles.push(tileArray[i][k]);
              }
            }
+         }
+       }
+
+       for (var i = 0; i < w; i++) {
+         for (var k = 0; k < h; k++) {
            //this little math just means:
            //if I moved with my first action, I could hit a red tile with my second (with at least one of my weapons)
            if (self.combatCount > 0){ //of course, they actually need to have combat actions left
              if (self.actionCount > 1) { //they also can't move and attack if there's only one action left, so red means nothing too
-               if ((self.distanceToTile(i, k) - maxAttackRange) <= self.attributes.Spd && self.distanceToTile(i, k) > self.attributes.Spd) {
-                 if (overlayArray[i][k]) overlayArray[i][k].destroy();
-                 overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
-                 overlayArray[i][k].alpha = 0.5;
-               }
+
+                 goodTiles.forEach(function(t) {
+                   if (t.distanceToTile(i, k) <= maxAttackRange){
+                     if (!overlayArray[i][k]) {
+                       console.log("tile in range!");
+
+                        overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
+                        overlayArray[i][k].alpha = 0.5;
+                     }
+                   }
+                 });
+
              }
              //sometimes, we can't move right up next to them, but we can still hit them right now
              //that's purple
@@ -665,6 +690,10 @@ window.addEventListener("load", function(evt) {
           selectedUnit.move(self.x, self.y);
         }
       })
+
+      this.distanceToTile = function(x, y) {
+        return Math.abs(self.x - x) + Math.abs(self.y - y);
+      }
 
       this.sprite.events.onInputDown.add(function(){
         if (!inGame) {

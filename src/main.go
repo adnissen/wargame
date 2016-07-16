@@ -149,12 +149,13 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(u)
 			fmt.Println(t)
 			fmt.Println(w)
-			used, damage := g.UseWeapon(u, t, w, g.GetPlayerIndex(newClient))
+			used, damage, roll := g.UseWeapon(u, t, w, g.GetPlayerIndex(newClient))
 			if used == true {
 				ret := map[string]interface{}{
 					"uid":    u.Uid.String(),
 					"weapon": w.Uid.String(),
 					"target": t.Uid.String(),
+					"roll":   strconv.Itoa(roll),
 					"damage": strconv.Itoa(damage)}
 				str, err := json.Marshal(ret)
 				if err != nil {

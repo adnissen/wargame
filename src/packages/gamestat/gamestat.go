@@ -178,21 +178,22 @@ func (g *GameStat) GetUnitGlobal(wId string) *units.Unit {
 	return nil
 }
 
-func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon, owner int) (bool, int) {
+func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon, owner int) (bool, int, int) {
 	used := false
 	damage := -1
+	roll := 0
 
 	if w.UsesRemaining <= 0 {
-		return false, -1
+		return false, -1, 0
 	}
 
 	if g.UnitActionCounts[u.Uid.String()] <= 0 {
-		return false, -1
+		return false, -1, 0
 	}
 
 	if w.NoAttack != true {
 		if g.UnitCombatCounts[u.Uid.String()] <= 0 {
-			return false, -1
+			return false, -1, 0
 		}
 	}
 	//pre attack
@@ -201,7 +202,7 @@ func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon,
 	}
 
 	if w.NoAttack != true {
-		used, damage = g.Attack(u, target, w)
+		used, damage, roll = g.Attack(u, target, w)
 	}
 
 	//post attack
@@ -209,14 +210,14 @@ func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon,
 		//use ability here
 	}
 
-	return used, damage
+	return used, damage, roll
 }
 
-func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.Weapon) (bool, int) {
+func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.Weapon) (bool, int, int) {
 	attacked := false
 	damage := -1
+	r := dice.Roll(20)
 	if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= w.Rng && g.UnitHasSightTo(attacker, defender) {
-		r := dice.Roll(20)
 		g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
 		if (r + w.Atk) > defender.Attributes.Def {
 			damage = (w.Dmg - defender.Attributes.Amr)
@@ -230,7 +231,7 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 		g.UnitActionCounts[attacker.Uid.String()] -= 1
 		attacked = true
 	}
-	return attacked, damage
+	return attacked, damage, r
 }
 
 func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
