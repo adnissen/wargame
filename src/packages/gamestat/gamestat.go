@@ -270,6 +270,30 @@ func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 		return false
 	}
 
+	pathDistance := 0
+	for j := range moves {
+		if j == 0 {
+			continue
+		}
+
+		tt := g.GetTile(moves[j][0], moves[j][1])
+		switch tt.TileType {
+		case "mountain":
+			pathDistance += 2
+			break
+		case "forest":
+			pathDistance += 2
+			break
+		case "grass":
+			pathDistance += 1
+			break
+		}
+	}
+
+	if pathDistance > unit.Attributes.Spd {
+		return false
+	}
+
 	startx := unit.X
 	starty := unit.Y
 	fmt.Println(moves)

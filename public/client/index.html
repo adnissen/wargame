@@ -506,10 +506,29 @@ window.addEventListener("load", function(evt) {
              var finder = new PF.AStarFinder();
              var path = finder.findPath(self.x, self.y, tileArray[i][k].x, tileArray[i][k].y, grid);
              if (tileArray[i][k].walkable && !tileArray[i][k].unit && path.length != 0 && path.length - 1 <= self.attributes.Spd) {
-               //if there's a valid path, it's a nice blue overlay
-               overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'blue_overlay');
-               overlayArray[i][k].alpha = 0.5;
-               goodTiles.push(tileArray[i][k]);
+               var pathDistance  = 0;
+               for (var v = 1; v < path.length; v++) {
+                 var temp = tileArray[path[v][0]][path[v][1]];
+                 switch (temp.tileType) {
+                   case 'mountain':
+                     pathDistance += 2;
+                     break;
+                   case 'forest':
+                     pathDistance += 2;
+                     break;
+                   case 'grass':
+                     pathDistance += 1;
+                     break;
+                   default:
+                     pathDistance += self.attributes.Spd + 1;
+                 }
+               }
+               if (pathDistance <= self.attributes.Spd){
+                 //if there's a valid path, it's a nice blue overlay
+                 overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'blue_overlay');
+                 overlayArray[i][k].alpha = 0.5;
+                 goodTiles.push(tileArray[i][k]);
+               }
              }
            }
          }
