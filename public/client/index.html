@@ -339,6 +339,13 @@ window.addEventListener("load", function(evt) {
       return matrix
     }
 
+    function findPath(x1, y1, x2, y2) {
+      var grid = newMatrix();
+      var finder = new PF.AStarFinder();
+      var path = finder.findPath(x1, y1, x2, y2, grid);
+      return path;
+    }
+
     function preload() {
       game.load.onLoadComplete.add(function(){
         fullyLoaded = true;
@@ -502,9 +509,7 @@ window.addEventListener("load", function(evt) {
            //right at the start for every tile it falls into one of two categories: within our speed, and outside of it
            if (self.distanceToTile(i, k) <= self.attributes.Spd) {
              //once we know we have the speed to get to the tile, we need to make sure there is a valid path there, using pathfinding
-             var grid = newMatrix();
-             var finder = new PF.AStarFinder();
-             var path = finder.findPath(self.x, self.y, tileArray[i][k].x, tileArray[i][k].y, grid);
+             var path = findPath(self.x, self.y, tileArray[i][k].x, tileArray[i][k].y);
              if (tileArray[i][k].walkable && !tileArray[i][k].unit && path.length != 0 && path.length - 1 <= self.attributes.Spd) {
                var pathDistance  = 0;
                for (var v = 1; v < path.length; v++) {
@@ -609,7 +614,7 @@ window.addEventListener("load", function(evt) {
            print("ATK: " + w.Atk, "weapons-output");
            print("RNG: " + w.Rng, "weapons-output");
            print("DMG: " + w.Dmg, "weapons-output");
-           print("hit on: 1d20+" + w.Atk + " > " + self.attributes.Def, "weapons-output");
+           print("HIT: " + 100 - ((self.attributes.Def - w.Atk) * 5) + "%", "weapons-output");
            var useBtn = '<button id="' + w.Uid + '">Use</button>';
            print(useBtn, "weapons-output");
            document.getElementById(w.Uid).addEventListener("click", function(){
@@ -639,10 +644,7 @@ window.addEventListener("load", function(evt) {
       })
 
       self.move = function(x, y) {
-        var grid = newMatrix();
-        var finder = new PF.AStarFinder();
-        console.log(grid);
-        var path = finder.findPath(self.x, self.y, x, y, grid);
+        var path = findPath(self.x, self.y, x, y);
         if (path.length === 0 || path.length - 2 > self.attributes.Spd) {
           return;
         }
