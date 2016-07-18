@@ -38,6 +38,7 @@ type UnitAttributes struct {
 	Amr       int
 	Spd       int
 	Hps       int
+	Abilities []string
 	WeaponIds []int
 	Weapons   []Weapon
 }

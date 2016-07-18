@@ -2,7 +2,7 @@
 <head>
 <meta charset="utf-8">
 <script type="text/javascript" src="/public/dist/phaser.js"></script>
-<script type="text/javascript" src="/public/dist/pathfinding-browser.min.js"></script>
+<script type="text/javascript" src="/public/dist/easyfind.min.js"></script>
   <style type="text/css">
       body {
           margin: 0;
@@ -173,7 +173,6 @@ window.addEventListener("load", function(evt) {
                   DeselectRange();
                   u.showRange();
                 }
-                updateMatrix();
                 break;
               case 'game_use_weapon':
                 var m = JSON.parse(message.Message);
@@ -228,7 +227,6 @@ window.addEventListener("load", function(evt) {
                   btn.style.display = 'none'
                 }
                 resetActions();
-                updateMatrix();
                 break;
               default:
                 console.log("Message " + message + " recieved with no handler!")
@@ -301,37 +299,25 @@ window.addEventListener("load", function(evt) {
     var activeMove = {};
     var fullyLoaded = false;
     var weaponsUi = document.getElementById("weapons");
+    var calculatingPaths = {};
 
     function myTurn() {
       return currentTurn === myTeam;
     }
 
-    function updateMatrix() {
-      var w = tileArray.length;
-      var h = tileArray[0].length;
-      var matrix = new PF.Grid(w, h);
-      for (var i = 0; i < w; i++) {
-        for (var k = 0; k < h; k++) {
-          if (tileArray[i][k].walkable && !tileArray[i][k].unit) {
-            matrix.setWalkableAt(i, k, true);
-          } else {
-            matrix.setWalkableAt(i, k, false);
-          }
-        }
-      }
-      mapMatrix = matrix;
-    }
-
     function newMatrix() {
       var w = tileArray.length;
       var h = tileArray[0].length;
-      var matrix = new PF.Grid(w, h);
+      //var matrix = new PF.Grid(w, h);
+      var matrix = new Array(w);
       for (var i = 0; i < w; i++) {
+        matrix[i] = new Array(h);
         for (var k = 0; k < h; k++) {
           if (tileArray[i][k].walkable && !tileArray[i][k].unit) {
-            matrix.setWalkableAt(i, k, true);
+            if (tileArray[i][k].tileType != 'grass') matrix[i][k] = 2;
+            else matrix[i][k] = 1;
           } else {
-            matrix.setWalkableAt(i, k, false);
+            matrix[i][k] = 0;
           }
         }
       }
@@ -339,11 +325,35 @@ window.addEventListener("load", function(evt) {
       return matrix
     }
 
-    function findPath(x1, y1, x2, y2) {
+    function findPath(x1, y1, x2, y2, cb) {
+      var easystar = new EasyStar.js();
       var grid = newMatrix();
-      var finder = new PF.AStarFinder();
-      var path = finder.findPath(x1, y1, x2, y2, grid);
-      return path;
+      var id = Date.now();
+      easystar.setGrid(grid);
+      easystar.setAcceptableTiles([1, 2]);
+      easystar.setTileCost(2, 2);
+      var finalPath = null;
+      calculatingPaths[id] = true;
+      easystar.findPath(x1, y1, x2, y2, function (path) {
+        if (path === null){
+          finalPath = [];
+        } else {
+          finalPath = path;
+        }
+        console.log("PATH");
+        console.log(path);
+        delete calculatingPaths[id];
+        cb(path);
+      });
+      var t = setInterval(function() {
+        if (!finalPath) easystar.calculate();
+        else clearTimeout(t);
+      }, 10)
+    }
+
+    function pathfindingActive() {
+      if (Object.keys(calculatingPaths).length > 0) return true;
+      else return false;
     }
 
     function preload() {
@@ -499,79 +509,90 @@ window.addEventListener("load", function(evt) {
        console.log("MAX ATTACK RANGE: " + maxAttackRange)
        var w = tileArray.length;
        var h = tileArray[0].length;
-       overlayArray = new Array(w);
+       overlayArray = new Array(tileArray.length);
        var goodTiles = [];
+       for (var i = 0; i < tileArray.length; i++) {
+         overlayArray[i] = new Array(tileArray[0].length);
+       }
+
        for (var i = 0; i < w; i++) {
-         overlayArray[i] = new Array(h);
+         //overlayArray[i] = new Array(tileArray.length[0]);
          for (var k = 0; k < h; k++) {
            //this is all disgusting, so let me break it down for you
-
            //right at the start for every tile it falls into one of two categories: within our speed, and outside of it
            if (self.distanceToTile(i, k) <= self.attributes.Spd) {
              //once we know we have the speed to get to the tile, we need to make sure there is a valid path there, using pathfinding
-             var path = findPath(self.x, self.y, tileArray[i][k].x, tileArray[i][k].y);
-             if (tileArray[i][k].walkable && !tileArray[i][k].unit && path.length != 0 && path.length - 1 <= self.attributes.Spd) {
-               var pathDistance  = 0;
-               for (var v = 1; v < path.length; v++) {
-                 var temp = tileArray[path[v][0]][path[v][1]];
-                 switch (temp.tileType) {
-                   case 'mountain':
-                     pathDistance += 2;
-                     break;
-                   case 'forest':
-                     pathDistance += 2;
-                     break;
-                   case 'grass':
-                     pathDistance += 1;
-                     break;
-                   default:
-                     pathDistance += self.attributes.Spd + 1;
+             findPath(self.x, self.y, tileArray[i][k].x, tileArray[i][k].y, function(path) {
+               var ti = path[path.length - 1].x
+               var tk = path[path.length - 1].y
+               if (tileArray[ti][tk].walkable && !tileArray[ti][tk].unit && path.length != 0 && path.length - 1 <= self.attributes.Spd) {
+                 var pathDistance  = 0;
+                 for (var v = 1; v < path.length; v++) {
+                   var temp = tileArray[path[v].x][path[v].y];
+                   switch (temp.tileType) {
+                     case 'mountain':
+                       pathDistance += 2;
+                       break;
+                     case 'forest':
+                       pathDistance += 2;
+                       break;
+                     case 'grass':
+                       pathDistance += 1;
+                       break;
+                     default:
+                       pathDistance += self.attributes.Spd + 1;
+                   }
+                 }
+                 if (pathDistance <= self.attributes.Spd){
+                   //if there's a valid path, it's a nice blue overlay
+                   overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].sprite.x, tileArray[ti][tk].sprite.y, 'blue_overlay');
+                   overlayArray[ti][tk].alpha = 0.5;
+                   goodTiles.push(tileArray[ti][tk]);
                  }
                }
-               if (pathDistance <= self.attributes.Spd){
-                 //if there's a valid path, it's a nice blue overlay
-                 overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'blue_overlay');
-                 overlayArray[i][k].alpha = 0.5;
-                 goodTiles.push(tileArray[i][k]);
-               }
-             }
+             });
            }
          }
        }
 
-       for (var i = 0; i < w; i++) {
-         for (var k = 0; k < h; k++) {
-           //this little math just means:
-           //if I moved with my first action, I could hit a red tile with my second (with at least one of my weapons)
-           if (self.combatCount > 0){ //of course, they actually need to have combat actions left
-             if (self.actionCount > 1) { //they also can't move and attack if there's only one action left, so red means nothing too
-
-                 goodTiles.forEach(function(t) {
-                   if (t.distanceToTile(i, k) <= maxAttackRange){
-                     var eligible = true;
-                     if (tileArray[i][k].unit) {
-                       if (unitHash[tileArray[i][k].unit].team == myTeam) eligible = false;
-                     }
-                     if (tileArray[i][k].blocksVision) eligible = false;
-                     if (maxAttackRange <= 1 && !tileArray[i][k].walkable) eligible = false;
-                     if (!overlayArray[i][k] && eligible) {
-                        overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
-                        overlayArray[i][k].alpha = 0.5;
-                     }
-                   }
-                 });
-
-             }
-             //sometimes, we can't move right up next to them, but we can still hit them right now
-             //that's purple
-             if (self.distanceToTile(i, k) <= maxAttackRange && tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team != myTeam) {
-               if (overlayArray[i][k]) overlayArray[i][k].destroy()
-               overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'purple_overlay');
-               overlayArray[i][k].alpha = 0.5;
-             }
-           }
-         }
-       }
+      //  var t = setInterval(function(){
+      //    if (!pathfindingActive()){
+      //      clearInterval(t);
+      //      for (var i = 0; i < w; i++) {
+      //        for (var k = 0; k < h; k++) {
+      //          //this little math just means:
+      //          //if I moved with my first action, I could hit a red tile with my second (with at least one of my weapons)
+      //          if (self.combatCount > 0){ //of course, they actually need to have combat actions left
+      //            if (self.actionCount > 1) { //they also can't move and attack if there's only one action left, so red means nothing too
+       //
+      //                goodTiles.forEach(function(t) {
+      //                  if (t.distanceToTile(i, k) <= maxAttackRange){
+      //                    var eligible = true;
+      //                    if (tileArray[i][k].unit) {
+      //                      if (unitHash[tileArray[i][k].unit].team == myTeam) eligible = false;
+      //                    }
+      //                    if (tileArray[i][k].blocksVision) eligible = false;
+      //                    if (maxAttackRange <= 1 && !tileArray[i][k].walkable) eligible = false;
+      //                    if (!overlayArray[i][k] && eligible) {
+      //                       overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
+      //                       overlayArray[i][k].alpha = 0.5;
+      //                    }
+      //                  }
+      //                });
+       //
+      //            }
+      //            //sometimes, we can't move right up next to them, but we can still hit them right now
+      //            //that's purple
+      //            if (self.distanceToTile(i, k) <= maxAttackRange && tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team != myTeam) {
+      //              if (overlayArray[i][k]) overlayArray[i][k].destroy()
+      //              overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'purple_overlay');
+      //              overlayArray[i][k].alpha = 0.5;
+      //            }
+      //          }
+      //        }
+      //      }
+      //    }
+      //  }, 100)
      }
 
      self.notifyAnimation = function(key, color){}
@@ -644,19 +665,25 @@ window.addEventListener("load", function(evt) {
       })
 
       self.move = function(x, y) {
-        var path = findPath(self.x, self.y, x, y);
-        if (path.length === 0 || path.length - 2 > self.attributes.Spd) {
-          return;
-        }
-        var ret = {};
-        ret.messageType = "game_move";
-        ret.message = {};
-        ret.message.uid = self.uid;
-        ret.message.moves = path;
-        ret.message = JSON.stringify(ret.message)
-        console.log("MOVING ON PATH " + path);
-        ws.send(JSON.stringify(ret));
-        updateMatrix();
+        findPath(self.x, self.y, x, y, function(path) {
+          if (path.length === 0 || path.length - 2 > self.attributes.Spd) {
+            return;
+          }
+          for (var i = 0; i < path.length; i++){
+            var ary = [];
+            ary.push(path[i].x);
+            ary.push(path[i].y);
+            path[i] = ary;
+          }
+          var ret = {};
+          ret.messageType = "game_move";
+          ret.message = {};
+          ret.message.uid = self.uid;
+          ret.message.moves = path;
+          ret.message = JSON.stringify(ret.message)
+          console.log("MOVING ON PATH " + path);
+          ws.send(JSON.stringify(ret));
+        });
       }
 
     }
