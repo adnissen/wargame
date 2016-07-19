@@ -50,6 +50,7 @@ type Weapon struct {
 	Key           string
 	Atk           int
 	Rng           int
+	MinRng        int
 	Dmg           int
 	Uses          int
 	UsesRemaining int

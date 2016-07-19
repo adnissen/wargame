@@ -201,6 +201,11 @@ func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon,
 			return false, -1, 0
 		}
 	}
+
+	if gamemap.DistanceBetweenTiles(u.X, u.Y, target.X, target.Y) > w.Rng || gamemap.DistanceBetweenTiles(u.X, u.Y, target.X, target.Y) < w.MinRng || !g.UnitHasSightTo(u, target) {
+		return false, -1, 0
+	}
+
 	//pre attack
 	if w.Ability == true {
 		//use ability here
@@ -222,20 +227,18 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 	attacked := false
 	damage := -1
 	r := dice.Roll(20)
-	if gamemap.DistanceBetweenTiles(attacker.X, attacker.Y, defender.X, defender.Y) <= w.Rng && g.UnitHasSightTo(attacker, defender) {
-		g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
-		if (r + w.Atk) > defender.Attributes.Def {
-			damage = (w.Dmg - defender.Attributes.Amr)
-			defender.Attributes.Hps = defender.Attributes.Hps - damage
-			if defender.Attributes.Hps <= 0 {
-				delete(g.UnitActionCounts, defender.Uid.String())
-				delete(g.UnitCombatCounts, defender.Uid.String())
-			}
+	g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
+	if (r + w.Atk) > defender.Attributes.Def {
+		damage = (w.Dmg - defender.Attributes.Amr)
+		defender.Attributes.Hps = defender.Attributes.Hps - damage
+		if defender.Attributes.Hps <= 0 {
+			delete(g.UnitActionCounts, defender.Uid.String())
+			delete(g.UnitCombatCounts, defender.Uid.String())
 		}
-		g.UnitCombatCounts[attacker.Uid.String()] -= 1
-		g.UnitActionCounts[attacker.Uid.String()] -= 1
-		attacked = true
 	}
+	g.UnitCombatCounts[attacker.Uid.String()] -= 1
+	g.UnitActionCounts[attacker.Uid.String()] -= 1
+	attacked = true
 	return attacked, damage, r
 }
 
