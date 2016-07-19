@@ -325,11 +325,24 @@ window.addEventListener("load", function(evt) {
       return matrix
     }
 
+    function flipGrid(grid) {
+      var w = grid.length;
+      var h = grid[0].length;
+      var matrix = new Array(h);
+      for (var i = 0; i < h; i++) {
+        matrix[i] = new Array(w);
+        for (var k = 0; k < w; k++) {
+          matrix[i][k] = grid[k][i];
+        }
+      }
+      return matrix;
+    }
+
     function findPath(x1, y1, x2, y2, cb) {
       var easystar = new EasyStar.js();
       var grid = newMatrix();
       var id = Date.now();
-      easystar.setGrid(grid);
+      easystar.setGrid(flipGrid(grid));
       easystar.setAcceptableTiles([1, 2]);
       easystar.setTileCost(2, 2);
       var finalPath = null;
@@ -340,8 +353,6 @@ window.addEventListener("load", function(evt) {
         } else {
           finalPath = path;
         }
-        console.log("PATH");
-        console.log(path);
         delete calculatingPaths[id];
         cb(path);
       });
@@ -523,6 +534,7 @@ window.addEventListener("load", function(evt) {
            if (self.distanceToTile(i, k) <= self.attributes.Spd) {
              //once we know we have the speed to get to the tile, we need to make sure there is a valid path there, using pathfinding
              findPath(self.x, self.y, tileArray[i][k].x, tileArray[i][k].y, function(path) {
+               if (path.length == 0) return;
                var ti = path[path.length - 1].x
                var tk = path[path.length - 1].y
                if (tileArray[ti][tk].walkable && !tileArray[ti][tk].unit && path.length != 0 && path.length - 1 <= self.attributes.Spd) {
@@ -545,12 +557,22 @@ window.addEventListener("load", function(evt) {
                  }
                  if (pathDistance <= self.attributes.Spd){
                    //if there's a valid path, it's a nice blue overlay
-                   overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].sprite.x, tileArray[ti][tk].sprite.y, 'blue_overlay');
-                   overlayArray[ti][tk].alpha = 0.5;
-                   goodTiles.push(tileArray[ti][tk]);
+                   if (overlayArray[ti][tk]) {
+                     overlayArray[ti][tk].destroy();
+                     overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].sprite.x, tileArray[ti][tk].sprite.y, 'purple_overlay');
+                     overlayArray[ti][tk].alpha = 0.5;
+                   } else {
+                     overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].sprite.x, tileArray[ti][tk].sprite.y, 'blue_overlay');
+                     overlayArray[ti][tk].alpha = 0.5;
+                   }
                  }
                }
              });
+           }
+
+           if (self.distanceToTile(i, k) <= maxAttackRange) {
+              overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
+              overlayArray[i][k].alpha = 0.5;
            }
          }
        }
