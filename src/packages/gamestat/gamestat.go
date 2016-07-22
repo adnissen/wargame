@@ -11,6 +11,7 @@ import (
 	"github.com/adnissen/wargame/src/packages/dice"
 	"github.com/adnissen/wargame/src/packages/gameclient"
 	"github.com/adnissen/wargame/src/packages/gamemap"
+	"github.com/adnissen/wargame/src/packages/los"
 	"github.com/adnissen/wargame/src/packages/units"
 	"github.com/satori/go.uuid"
 )
@@ -111,47 +112,22 @@ func (g *GameStat) GetWeapon(wId string, owner int) *units.Weapon {
 }
 
 func (g *GameStat) UnitHasSightTo(u *units.Unit, t *units.Unit) bool {
-	/*
-		https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
-	*/
-	dx := t.X - u.X
-	dy := t.Y - u.Y
-	D := dy - dx
-	y := u.Y
-	var ray [][]int
-	vision := true
-	for i := u.X; i < t.X-1; i++ {
-		ray = append(ray, []int{i, y})
-		if D >= 0 {
-			y = y + 1
-			D = D - dx
-		}
-		D = D + dy
-	}
-	for j, v := range ray {
-		tempU := g.GetUnitOnTile(v[0], v[1])
-
-		if j == len(ray)-1 {
+	path := los.MakeLine(u.X, u.Y, t.X, t.Y)
+	for _, c := range path {
+		tile := g.GetTile(c[0], c[1])
+		if tile.X == u.X && tile.Y == u.Y {
 			continue
 		}
 
-		if g.GetTile(v[0], v[1]).BlocksVision == true {
-			vision = false
-			break
+		if tile.X == t.X && tile.Y == t.Y {
+			continue
 		}
 
-		if tempU == nil {
-			continue
-		}
-		if tempU == t || tempU == u {
-			continue
-		}
-		if tempU.Team != u.Team {
-			vision = false
-			break
+		if tile.BlocksVision || tile.Unit != nil {
+			return false
 		}
 	}
-	return vision
+	return true
 }
 
 func (g *GameStat) GetUnit(wId string, owner int) *units.Unit {
