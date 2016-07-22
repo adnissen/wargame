@@ -130,13 +130,14 @@ func (g *GameStat) UnitHasSightTo(u *units.Unit, t *units.Unit) bool {
 	}
 	for j, v := range ray {
 		tempU := g.GetUnitOnTile(v[0], v[1])
-		if g.GetTile(v[0], v[1]).BlocksVision == true {
-			vision = false
-			break
-		}
 
 		if j == len(ray)-1 {
 			continue
+		}
+
+		if g.GetTile(v[0], v[1]).BlocksVision == true {
+			vision = false
+			break
 		}
 
 		if tempU == nil {

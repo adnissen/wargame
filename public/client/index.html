@@ -508,6 +508,21 @@ window.addEventListener("load", function(evt) {
        return Math.abs(self.x - x) + Math.abs(self.y - y);
      }
 
+     self.hasSightTo = function(x, y) {
+       var vision = true;
+       var bresenham = makeBresenham(self.x, self.y, x, y);
+       while (bresenham.hasNext()) {
+				 var p = bresenham.next();
+         var t = tileArray[p.x][p.y]
+         if (p.x == self.x && p.y == self.y) continue;
+         if (p.x == x && p.y == y) continue;
+				 if (t.blocksVision || (t.unit && unitHash[t.unit].team != myTeam)) {
+			     return false;
+			   }
+			 }
+			 return true;
+     }
+
      self.showRange = function(){
        //first and foremost, if a unit doesn't have any more actions, we don't need to do any of this
        if (self.actionCount <= 0) {
@@ -534,6 +549,7 @@ window.addEventListener("load", function(evt) {
            if (self.distanceToTile(i, k) <= self.attributes.Spd) {
              //once we know we have the speed to get to the tile, we need to make sure there is a valid path there, using pathfinding
              findPath(self.x, self.y, tileArray[i][k].x, tileArray[i][k].y, function(path) {
+               if (!path) return;
                if (path.length == 0) return;
                var ti = path[path.length - 1].x
                var tk = path[path.length - 1].y
@@ -570,7 +586,8 @@ window.addEventListener("load", function(evt) {
              });
            }
 
-           if (self.distanceToTile(i, k) <= maxAttackRange) {
+           if (self.distanceToTile(i, k) <= maxAttackRange && self.hasSightTo(i, k)) {
+             if (tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team == myTeam) continue;
               overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
               overlayArray[i][k].alpha = 0.5;
            }
@@ -688,6 +705,7 @@ window.addEventListener("load", function(evt) {
 
       self.move = function(x, y) {
         findPath(self.x, self.y, x, y, function(path) {
+          if (!path) return;
           if (path.length === 0 || path.length - 2 > self.attributes.Spd) {
             return;
           }
@@ -962,6 +980,7 @@ window.addEventListener("load", function(evt) {
           tileJson.tileType = tileObj.tileType;
           tileJson.castle = tileObj.castle;
           tileJson.capturable = tileObj.capturable;
+          tileJson.blocksVision = tileObj.blocksVision;
           tileJson.x = tileObj.x;
           tileJson.y = tileObj.y;
           print(tileJson.x + " " + tileJson.y)
@@ -1042,6 +1061,40 @@ window.addEventListener("load", function(evt) {
 
 
     }
+
+  function makeBresenham(xStart, yStart, xEnd, yEnd) {
+		var deltaX = Math.floor(Math.abs(xEnd - xStart));
+		var deltaY = Math.floor(Math.abs(yEnd - yStart));
+		var xStep = (xEnd >= xStart) ? 1 : -1;
+		var yStep = (yEnd >= yStart) ? 1 : -1;
+		var error = deltaX - deltaY;
+		var xGrid = xStart, yGrid = yStart;
+
+		function hasNext() {
+			return !(xGrid == xEnd && yGrid == yEnd);
+		}
+
+		function next() {
+			var toReturn = {x: xGrid, y: yGrid};
+
+			var twoError = 2 * error;
+			if (twoError > (-1 * deltaY)) {
+				error -= deltaY;
+				xGrid += xStep;
+			}
+			if (twoError < deltaX) {
+				error += deltaX;
+				yGrid += yStep;
+			}
+
+			return toReturn;
+		}
+
+		return {
+			next: next,
+			hasNext: hasNext
+		};
+	}
 
 });
 </script>
