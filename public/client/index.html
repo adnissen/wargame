@@ -516,7 +516,7 @@ window.addEventListener("load", function(evt) {
          var t = tileArray[p.x][p.y]
          if (p.x == self.x && p.y == self.y) continue;
          if (p.x == x && p.y == y) continue;
-				 if (t.blocksVision || (t.unit && unitHash[t.unit].team != myTeam)) {
+				 if (t.blocksVision || t.unit {
 			     return false;
 			   }
 			 }
@@ -587,7 +587,6 @@ window.addEventListener("load", function(evt) {
            }
 
            if (self.distanceToTile(i, k) <= maxAttackRange && self.hasSightTo(i, k)) {
-             if (tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team == myTeam) continue;
               overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
               overlayArray[i][k].alpha = 0.5;
            }
