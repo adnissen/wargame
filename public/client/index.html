@@ -379,6 +379,9 @@ window.addEventListener("load", function(evt) {
       game.load.image('red_overlay', '/public/client/assets/sprites/tiles/red_overlay.png');
       game.load.image('purple_overlay', '/public/client/assets/sprites/tiles/purple_overlay.png');
       game.load.image('blue_overlay', '/public/client/assets/sprites/tiles/blue_overlay.png');
+      game.load.image('flag', '/public/client/assets/sprites/flag.png');
+      game.load.image('flag_red', '/public/client/assets/sprites/flag_red.png');
+      game.load.image('flag_blue', '/public/client/assets/sprites/flag_blue.png');
       game.load.image('grass1', '/public/client/assets/sprites/tiles/grass1.png');
       game.load.image('mountain1', '/public/client/assets/sprites/tiles/mountain1.png');
       game.load.image('forest1', '/public/client/assets/sprites/tiles/forest1.png');
@@ -593,45 +596,6 @@ window.addEventListener("load", function(evt) {
            }
          }
        }
-
-      //  var t = setInterval(function(){
-      //    if (!pathfindingActive()){
-      //      clearInterval(t);
-      //      for (var i = 0; i < w; i++) {
-      //        for (var k = 0; k < h; k++) {
-      //          //this little math just means:
-      //          //if I moved with my first action, I could hit a red tile with my second (with at least one of my weapons)
-      //          if (self.combatCount > 0){ //of course, they actually need to have combat actions left
-      //            if (self.actionCount > 1) { //they also can't move and attack if there's only one action left, so red means nothing too
-       //
-      //                goodTiles.forEach(function(t) {
-      //                  if (t.distanceToTile(i, k) <= maxAttackRange){
-      //                    var eligible = true;
-      //                    if (tileArray[i][k].unit) {
-      //                      if (unitHash[tileArray[i][k].unit].team == myTeam) eligible = false;
-      //                    }
-      //                    if (tileArray[i][k].blocksVision) eligible = false;
-      //                    if (maxAttackRange <= 1 && !tileArray[i][k].walkable) eligible = false;
-      //                    if (!overlayArray[i][k] && eligible) {
-      //                       overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
-      //                       overlayArray[i][k].alpha = 0.5;
-      //                    }
-      //                  }
-      //                });
-       //
-      //            }
-      //            //sometimes, we can't move right up next to them, but we can still hit them right now
-      //            //that's purple
-      //            if (self.distanceToTile(i, k) <= maxAttackRange && tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team != myTeam) {
-      //              if (overlayArray[i][k]) overlayArray[i][k].destroy()
-      //              overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'purple_overlay');
-      //              overlayArray[i][k].alpha = 0.5;
-      //            }
-      //          }
-      //        }
-      //      }
-      //    }
-      //  }, 100)
      }
 
      self.notifyAnimation = function(key, color){}
@@ -775,6 +739,13 @@ window.addEventListener("load", function(evt) {
       this.capturable = params.Capturable || false;
       this.blocksVision = (params.BlocksVision) || false;
       this.owner = params.Owner || 0;
+      this.objective = params.Objective || null;
+      if (this.objective && this.objective.Key) {
+        this.objective.sprite = game.add.sprite(this.sprite.x, this.sprite.y, this.objective.Key);
+        this.objective.key = this.objective.Key;
+        this.objective.owned = this.objective.Owned;
+        this.objective.owner = this.objective.Owner;
+      }
       if (params.Unit) {
         this.unit = params.Unit.Uid;
       }
@@ -788,6 +759,14 @@ window.addEventListener("load", function(evt) {
           case 2:
             self.overlay.loadTexture(key);
             self.overlayKey = key;
+            break;
+          case 3:
+            if (self.objective) {
+              self.objective.sprite.destroy();
+            }
+            self.objective = {};
+            self.objective.sprite = game.add.sprite(self.sprite.x, self.sprite.y, key);
+            self.objective.key = key;
             break;
           default:
             self.sprite.loadTexture(key);
@@ -852,6 +831,8 @@ window.addEventListener("load", function(evt) {
               self.walkable = true;
               self.tileType = 'forest';
               self.blocksVision = true;
+            case 8:
+              updateTexture('flag', 3);
             default:
               break;
           }
@@ -880,7 +861,8 @@ window.addEventListener("load", function(evt) {
           break;
         case 'KeyQ':
           if (selectedTile == 5) selectedTile = 6;
-          else if (selectedTile == 6) selectedTile = 5;
+          else if (selectedTile == 6) selectedTile = 8;
+          else if (selectedTile == 8) selectedTile = 5;
           else selectedTile = 5;
           break;
         default:
@@ -983,10 +965,16 @@ window.addEventListener("load", function(evt) {
           tileJson.blocksVision = tileObj.blocksVision;
           tileJson.x = tileObj.x;
           tileJson.y = tileObj.y;
-          print(tileJson.x + " " + tileJson.y)
+          if (tileObj.objective) {
+            tileJson.objective = {};
+            tileJson.objective.key = tileObj.objective.key;
+          }
           ret.message.map[i][k] = tileJson;
         }
       }
+      print("exporting map");
+      console.log("EXPORTING");
+      console.log(ret.message)
       //console.log(ret);
       ret.message = JSON.stringify(ret.message);
       ret.messageType = "map_export_data";

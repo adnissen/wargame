@@ -19,6 +19,7 @@ type Tile struct {
 	Castle       bool
 	Capturable   bool
 	BlocksVision bool
+	Objective    Objective
 	Owner        int
 	X            int
 	Y            int
@@ -27,6 +28,12 @@ type Tile struct {
 
 type Map struct {
 	Map [][]Tile
+}
+
+type Objective struct {
+	Owned bool
+	Key   string
+	Owner int
 }
 
 var MapList = make(map[string]Map, 100)
