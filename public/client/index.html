@@ -119,11 +119,18 @@ window.addEventListener("load", function(evt) {
                 myTeam = parseInt(message.Message)
                 if (myTeam == 0) myColor = "red";
                 else myColor = "blue";
-                console.log(message);
-                console.log('got team message, on team ' + myTeam)
+                break;
+              case 'game_end':
+                var winner = JSON.parse(message.Message).winner;
+                if (winner == myTeam) print("You won!");
+                else print ("You lost.");
+                clearMap();
+                inGame = false;
                 break;
               case 'announce':
                 //alert(message.Message);
+                print(message.Message);
+                //debugger;
                 break;
               case 'map_data':
                 var t = setInterval(function(){
@@ -900,6 +907,10 @@ window.addEventListener("load", function(evt) {
         }
       }
       tileArray = [[]];
+      game.world.removeAll();
+      unitHash = {};
+      var btn = document.getElementById('endturn');
+      btn.style.display = 'none';
     }
 
     function loadMap(mapAry){
