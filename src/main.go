@@ -68,6 +68,21 @@ func removeConnFromClients(c *websocket.Conn) {
 	}
 }
 
+func findMatches() {
+	var c1 *gameclient.GameClient
+	for i := range clients {
+		if clients[i].CurrentGame.String() == "00000000-0000-0000-0000-000000000000" {
+			if c1 == nil {
+				c1 = clients[i]
+			} else {
+				gstat := gamestat.CreateGame(c1, clients[i])
+				runningGames[gstat.Uid.String()] = gstat
+				break
+			}
+		}
+	}
+}
+
 func echo(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	log.Printf("client connected %s", r.RemoteAddr)
@@ -98,21 +113,20 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	newClient.SendMessage(units.SquadInformation())
 	newClient.SendMessage(newA.ArmyInformation())
 
-	//VERY poor mans matchmaking, only works for the first two people
-	if clients[0] != nil && clients[1] != nil {
-		gstat := gamestat.CreateGame(clients[0], clients[1])
-		runningGames[gstat.Uid.String()] = gstat
-	}
+	findMatches()
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
 	}
-	defer c.Close()
+
+	defer func() {
+		removeConnFromClients(c)
+		c.Close()
+	}()
 	for {
 		_, message, err := c.ReadMessage()
 		if err != nil {
 			log.Println("client disconnected:", err)
-			removeConnFromClients(c)
 			break
 		}
 		//log.Printf("game_logic: %s", message)
