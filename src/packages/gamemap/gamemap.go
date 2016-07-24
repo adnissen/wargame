@@ -67,6 +67,17 @@ func SaveMap(s string) {
 	fmt.Println("saved map!")
 }
 
+func (t *Tile) DefenseBonus() int {
+	switch t.TileType {
+	case "mountain":
+		return 4
+	case "forest":
+		return 4
+	default:
+		return 0
+	}
+}
+
 func (t *Tile) IsOpen() bool {
 	return t.Walkable && t.Unit == nil
 }

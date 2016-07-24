@@ -234,8 +234,7 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 	attacked := false
 	damage := -1
 	r := dice.Roll(20)
-	g.SendMessageToAllPlayers("announce", []byte(attacker.DisplayName+"("+strconv.Itoa(w.Atk)+") rolls "+strconv.Itoa(r)+" against "+defender.DisplayName+"("+strconv.Itoa(defender.Attributes.Def)+")"))
-	if (r + w.Atk) > defender.Attributes.Def {
+	if (r + w.Atk) > (defender.Attributes.Def + g.GetTile(defender.X, defender.Y).DefenseBonus()) {
 		damage = (w.Dmg - defender.Attributes.Amr)
 		defender.Attributes.Hps = defender.Attributes.Hps - damage
 		if defender.Attributes.Hps <= 0 {

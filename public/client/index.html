@@ -796,6 +796,19 @@ window.addEventListener("load", function(evt) {
         return Math.abs(self.x - x) + Math.abs(self.y - y);
       }
 
+      this.defenseBonus = function() {
+        switch (self.tileType) {
+          case 'mountain':
+            return 4
+            break;
+          case 'forest':
+            return 4
+            break;
+          default:
+            return 0;
+        }
+      }
+
       this.sprite.events.onInputDown.add(function(){
         if (!inGame) {
           switch (selectedTile) {
