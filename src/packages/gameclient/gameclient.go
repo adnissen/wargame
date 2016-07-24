@@ -48,5 +48,6 @@ func (g *GameClient) ResetCurrentGame() {
 func CreateGameClient(c *websocket.Conn) *GameClient {
 	ret := GameClient{}
 	ret.wbs = c
+	ret.ResetCurrentGame()
 	return &ret
 }

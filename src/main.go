@@ -71,10 +71,11 @@ func removeConnFromClients(c *websocket.Conn) {
 func findMatches() {
 	var c1 *gameclient.GameClient
 	for i := range clients {
-		if clients[i].CurrentGame.String() == "00000000-0000-0000-0000-000000000000" {
+		if clients[i] != nil && clients[i].CurrentGame.String() == "00000000-0000-0000-0000-000000000000" {
 			if c1 == nil {
 				c1 = clients[i]
 			} else {
+				fmt.Println("found match")
 				gstat := gamestat.CreateGame(c1, clients[i])
 				runningGames[gstat.Uid.String()] = gstat
 				break

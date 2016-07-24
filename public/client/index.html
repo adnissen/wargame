@@ -819,9 +819,9 @@ window.addEventListener("load", function(evt) {
               break;
             case 4:
               updateTexture('blank', 2);
-              self.castle = false;
               self.capturable = false;
               self.blocksVision = false;
+              self.objective = null;
               break;
             case 5:
               updateTexture('tile_outline_red', 2);
@@ -838,8 +838,10 @@ window.addEventListener("load", function(evt) {
               self.walkable = true;
               self.tileType = 'forest';
               self.blocksVision = true;
+              break;
             case 8:
               updateTexture('flag', 3);
+              break;
             default:
               break;
           }
