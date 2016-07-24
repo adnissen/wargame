@@ -58,6 +58,9 @@ func insertConnIntoClients(c *websocket.Conn) *gameclient.GameClient {
 
 func removeConnFromClients(c *websocket.Conn) {
 	for k, _ := range clients {
+		if clients[k] == nil {
+			continue
+		}
 		if clients[k].CompareWebSocketConn(c) {
 			if clients[k].CurrentGame.String() != "00000000-0000-0000-0000-000000000000" {
 				runningGames[clients[k].CurrentGame.String()].PlayerDisconnect(clients[k])
