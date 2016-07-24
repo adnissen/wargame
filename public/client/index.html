@@ -3,6 +3,7 @@
 <meta charset="utf-8">
 <script type="text/javascript" src="/public/dist/phaser.js"></script>
 <script type="text/javascript" src="/public/dist/easyfind.min.js"></script>
+<script type="text/javascript" src="/public/dist/cycle.js"></script>
   <style type="text/css">
       body {
           margin: 0;
@@ -385,7 +386,7 @@ window.addEventListener("load", function(evt) {
       game.load.image('tile_outline_blue', '/public/client/assets/sprites/tiles/tile_outline_blue.png');
       game.load.image('red_overlay', '/public/client/assets/sprites/tiles/red_overlay.png');
       game.load.image('purple_overlay', '/public/client/assets/sprites/tiles/purple_overlay.png');
-      game.load.image('blue_overlay', '/public/client/assets/sprites/tiles/blue_overlay.png');
+      game.load.image('white_overlay', '/public/client/assets/sprites/tiles/white_overlay.png');
       game.load.image('flag', '/public/client/assets/sprites/flag.png');
       game.load.image('flag_red', '/public/client/assets/sprites/flag_red.png');
       game.load.image('flag_blue', '/public/client/assets/sprites/flag_blue.png');
@@ -586,10 +587,10 @@ window.addEventListener("load", function(evt) {
                    if (overlayArray[ti][tk]) {
                      overlayArray[ti][tk].destroy();
                      overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].sprite.x, tileArray[ti][tk].sprite.y, 'purple_overlay');
-                     overlayArray[ti][tk].alpha = 0.5;
+                     overlayArray[ti][tk].alpha = 0.75;
                    } else {
-                     overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].sprite.x, tileArray[ti][tk].sprite.y, 'blue_overlay');
-                     overlayArray[ti][tk].alpha = 0.5;
+                     overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].sprite.x, tileArray[ti][tk].sprite.y, 'white_overlay');
+                     overlayArray[ti][tk].alpha = 0.75;
                    }
                  }
                }
@@ -599,7 +600,7 @@ window.addEventListener("load", function(evt) {
            if (self.distanceToTile(i, k) <= maxAttackRange && self.hasSightTo(i, k)) {
              if (tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team == myTeam) continue;
               overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
-              overlayArray[i][k].alpha = 0.5;
+              overlayArray[i][k].alpha = 0.75;
            }
          }
        }
@@ -821,7 +822,13 @@ window.addEventListener("load", function(evt) {
               updateTexture('blank', 2);
               self.capturable = false;
               self.blocksVision = false;
+              if (self.objective.sprite) {
+                self.objective.sprite.destroy();
+              }
               self.objective = null;
+              self.tileType = 'grass';
+              self.walkable = true;
+              this.spawn = false;
               break;
             case 5:
               updateTexture('tile_outline_red', 2);
@@ -962,11 +969,12 @@ window.addEventListener("load", function(evt) {
     function exportMap(){
       var ret = {};
       ret.message = {};
-      ret.message.map = tileArray;
-      for (var i = 0; i < ret.message.map.length; i++) {
-        for (var k = 0; k < ret.message.map[1].length; k++) {
+      ret.message.map = new Array(tileArray.length);
+      for (var i = 0; i < tileArray.length; i++) {
+        ret.message.map[i] = new Array(tileArray[0].length);
+        for (var k = 0; k < tileArray[0].length; k++) {
           var tileJson = {};
-          var tileObj = ret.message.map[i][k];
+          var tileObj = tileArray[i][k];
           tileJson.key = tileObj.key;
           tileJson.overlayKey = tileObj.overlayKey;
           tileJson.walkable = tileObj.walkable;
@@ -982,6 +990,7 @@ window.addEventListener("load", function(evt) {
             tileJson.objective = {};
             tileJson.objective.key = tileObj.objective.key;
           }
+          tileJson = JSON.parse(JSON.stringify(tileJson));
           ret.message.map[i][k] = tileJson;
         }
       }
