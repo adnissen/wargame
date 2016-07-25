@@ -94,10 +94,10 @@ func LoadUnits() {
 }
 
 func LoadSquads() {
-	SquadList[0] = Squad{Id: 0, Cost: 15, DisplayName: "Bromuk's Defenders", LeaderId: 0, GruntIds: []int{1, 1, 1}, Factions: []int{0, 1, 2}}
-	SquadList[1] = Squad{Id: 1, Cost: 20, DisplayName: "Corath's Rangers", LeaderId: 2, GruntIds: []int{3, 3}, Factions: []int{0, 1, 2}}
-	SquadList[2] = Squad{Id: 2, Cost: 15, DisplayName: "Lost Hunters", LeaderId: 6, GruntIds: []int{4, 4}, Factions: []int{0, 1, 2}}
-	SquadList[3] = Squad{Id: 3, Cost: 25, DisplayName: "The Thunder Cavalry", LeaderId: 5, GruntIds: []int{5, 5}, Factions: []int{0, 1, 2}}
+	SquadList[0] = Squad{Id: 0, Cost: 10, DisplayName: "Bromuk's Defenders", LeaderId: 0, GruntIds: []int{1, 1, 1}, Factions: []int{0, 1, 2}}
+	SquadList[1] = Squad{Id: 1, Cost: 15, DisplayName: "Corath's Rangers", LeaderId: 2, GruntIds: []int{3, 3}, Factions: []int{0, 1, 2}}
+	SquadList[2] = Squad{Id: 2, Cost: 10, DisplayName: "Lost Hunters", LeaderId: 6, GruntIds: []int{4, 4}, Factions: []int{0, 1, 2}}
+	SquadList[3] = Squad{Id: 3, Cost: 18, DisplayName: "The Thunder Cavalry", LeaderId: 5, GruntIds: []int{5, 5}, Factions: []int{0, 1, 2}}
 }
 
 func GetUnit(id int) Unit {

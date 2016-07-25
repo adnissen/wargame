@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"strconv"
+
+	"regexp"
 
 	"github.com/adnissen/wargame/src/packages/army"
 	"github.com/adnissen/wargame/src/packages/dice"
@@ -234,9 +237,61 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 	attacked := false
 	damage := -1
 	r := dice.Roll(20)
-	if (r + w.Atk) > (defender.Attributes.Def + g.GetTile(defender.X, defender.Y).DefenseBonus()) {
+	var attackModifier int
+	var damageModifier int
+
+	/*
+		attack mod / damage mod (v) keyword
+		matches and gives bonuses to attack and damage if the defender has keyword
+		we go through the cycle twice, once for the unit itself, and once for the weapon being used
+
+		+5/+4 v mounted
+
+		-4/+4 v kingslayer
+
+		0/-3 v dwarf
+	*/
+	rege, _ := regexp.Compile("((\\+\\d)|(\\-\\d)|(0))\\/((\\+\\d)|(\\-\\d)|(0))\\sv\\s\\w+")
+	for _, v := range attacker.Attributes.Keywords {
+		modStr := rege.MatchString(v)
+		if modStr == true {
+			mods := strings.Split(strings.Split(v, "v")[0], "/")
+			target := strings.Split(v, "v")[1]
+			target = strings.Replace(target, " ", "", -1)
+
+			for _, dv := range defender.Attributes.Keywords {
+				if dv == target {
+					am, _ := strconv.Atoi(mods[0])
+					dm, _ := strconv.Atoi(mods[1])
+
+					attackModifier += am
+					damageModifier += dm
+				}
+			}
+		}
+	}
+	for _, v := range w.Keywords {
+		modStr := rege.MatchString(v)
+		if modStr == true {
+			mods := strings.Split(strings.Split(v, "v")[0], "/")
+			target := strings.Split(v, "v")[1]
+			target = strings.Replace(target, " ", "", -1)
+
+			for _, dv := range defender.Attributes.Keywords {
+				if dv == target {
+					am, _ := strconv.Atoi(mods[0])
+					dm, _ := strconv.Atoi(mods[1])
+
+					attackModifier += am
+					damageModifier += dm
+				}
+			}
+		}
+	}
+
+	if (r + w.Atk + attackModifier) > (defender.Attributes.Def + g.GetTile(defender.X, defender.Y).DefenseBonus()) {
 		damage = (w.Dmg - defender.Attributes.Amr)
-		defender.Attributes.Hps = defender.Attributes.Hps - damage
+		defender.Attributes.Hps = defender.Attributes.Hps - (damage + damageModifier)
 		if defender.Attributes.Hps <= 0 {
 			delete(g.UnitActionCounts, defender.Uid.String())
 			delete(g.UnitCombatCounts, defender.Uid.String())
