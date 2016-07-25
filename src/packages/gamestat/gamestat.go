@@ -290,8 +290,8 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 	}
 
 	if (r + w.Atk + attackModifier) > (defender.Attributes.Def + g.GetTile(defender.X, defender.Y).DefenseBonus()) {
-		damage = (w.Dmg - defender.Attributes.Amr)
-		defender.Attributes.Hps = defender.Attributes.Hps - (damage + damageModifier)
+		damage = ((w.Dmg + damageModifier) - defender.Attributes.Amr)
+		defender.Attributes.Hps = defender.Attributes.Hps - damage
 		if defender.Attributes.Hps <= 0 {
 			delete(g.UnitActionCounts, defender.Uid.String())
 			delete(g.UnitCombatCounts, defender.Uid.String())

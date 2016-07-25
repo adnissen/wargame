@@ -159,9 +159,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			u := g.GetUnit(dat["uid"].(string), g.GetPlayerIndex(newClient))
 			t := g.GetUnitGlobal(dat["target"].(string))
 			w := g.GetWeapon(dat["weapon"].(string), g.GetPlayerIndex(newClient))
-			fmt.Println(u)
-			fmt.Println(t)
-			fmt.Println(w)
 			used, damage, roll := g.UseWeapon(u, t, w, g.GetPlayerIndex(newClient))
 			if used == true {
 				ret := map[string]interface{}{

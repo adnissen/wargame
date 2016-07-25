@@ -940,12 +940,11 @@ window.addEventListener("load", function(evt) {
       game.world.removeAll();
       unitHash = {};
       var btn = document.getElementById('endturn');
-      btn.style.display = 'none';
+      //btn.style.display = 'none';
     }
 
     function loadMap(mapAry){
-      var tempM = JSON.parse(mapAry.Message).Map;
-      var mapAry = JSON.parse(JSON.stringify(tempM));
+      var mapAry = JSON.parse(mapAry.Message).Map;
       var w = mapAry.length;
       var h = mapAry[0].length;
       for (var i = 0; i < w; i++) {
@@ -1010,7 +1009,6 @@ window.addEventListener("load", function(evt) {
             tileJson.objective = {};
             tileJson.objective.key = tileObj.objective.key;
           }
-          tileJson = JSON.parse(JSON.stringify(tileJson));
           ret.message.map[i][k] = tileJson;
         }
       }
