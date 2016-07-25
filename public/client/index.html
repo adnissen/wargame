@@ -402,6 +402,12 @@ window.addEventListener("load", function(evt) {
       game.load.image('archerguy_blue', '/public/client/assets/sprites/units/archerguy_blue.png');
       game.load.image('stout_guard_blue', '/public/client/assets/sprites/units/stout_guard_blue.png');
       game.load.image('stout_guard_red', '/public/client/assets/sprites/units/stout_guard_red.png');
+      game.load.image('spearman_red', '/public/client/assets/sprites/units/spearman_red.png');
+      game.load.image('spearman_blue', '/public/client/assets/sprites/units/spearman_blue.png');
+      game.load.image('mounted_knight_red', '/public/client/assets/sprites/units/mounted_knight_red.png');
+      game.load.image('mounted_knight_blue', '/public/client/assets/sprites/units/mounted_knight_blue.png');
+      game.load.image('farmer_man_red', '/public/client/assets/sprites/units/farmer_man_red.png');
+      game.load.image('farmer_man_blue', '/public/client/assets/sprites/units/farmer_man_blue.png');
 
       //tiles
       game.load.image('river1', '/public/client/assets/sprites/tiles/river1.png');
@@ -539,8 +545,10 @@ window.addEventListener("load", function(evt) {
          return;
        }
        var maxAttackRange = 1;
+       var minAttackRange = 99999;
        self.attributes.Weapons.forEach(function(w){
          if (w.Rng > maxAttackRange) maxAttackRange = w.Rng;
+         if (w.MinRng < minAttackRange) minAttackRange = w.MinRng;
        })
        console.log("MAX ATTACK RANGE: " + maxAttackRange)
        var w = tileArray.length;
@@ -596,7 +604,7 @@ window.addEventListener("load", function(evt) {
              });
            }
 
-           if (self.distanceToTile(i, k) <= maxAttackRange && self.hasSightTo(i, k)) {
+           if (self.distanceToTile(i, k) <= maxAttackRange && self.distanceToTile(i, k) >= minAttackRange && self.hasSightTo(i, k)) {
              if (tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team == myTeam) continue;
               overlayArray[i][k] = game.add.sprite(tileArray[i][k].sprite.x, tileArray[i][k].sprite.y, 'red_overlay');
               overlayArray[i][k].alpha = 0.75;
@@ -622,7 +630,7 @@ window.addEventListener("load", function(evt) {
        print("hitpoints: " + self.attributes.Hps, 'stat-output');
        print("speed: " + self.attributes.Spd, 'stat-output');
        print("defense: " + self.attributes.Def, 'stat-output');
-       print("terrain bonus: " + tileArray[self.x][self.y].defenseBonus());
+       print("terrain bonus: " + tileArray[self.x][self.y].defenseBonus(), 'stat-output');
        print("armor: " + self.attributes.Amr, 'stat-output');
 
        print("weapons:", "weapons-output");

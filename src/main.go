@@ -102,11 +102,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	newA := army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(1), units.CreateSquad(0)}}
-	for k := range newA.Squads {
-		for u := range newA.Squads[k].Grunts {
-			fmt.Println(newA.Squads[k].Grunts[u].Uid)
-		}
-	}
 
 	newClient.Army = newA
 

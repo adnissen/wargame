@@ -370,7 +370,7 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 		return nil
 	}
 	pary := []*gameclient.GameClient{p1, p2}
-	aary := []army.Army{p1.Army, p2.Army}
+	aary := []army.Army{army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(2), units.CreateSquad(0), units.CreateSquad(2)}}, army.Army{Squads: []units.Squad{units.CreateSquad(3), units.CreateSquad(3), units.CreateSquad(1)}}}
 	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gamemap.GetCustomMap()}
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
 	gstat.SetCurrentGameForAllPlayers()
