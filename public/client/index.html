@@ -843,7 +843,7 @@ window.addEventListener("load", function(evt) {
               updateTexture('blank', 2);
               self.capturable = false;
               self.blocksVision = false;
-              if (self.objective.sprite) {
+              if (self.objective && self.objective.sprite) {
                 self.objective.sprite.destroy();
               }
               self.objective = null;
