@@ -10,8 +10,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -214,12 +212,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
-	dat, _ := ioutil.ReadFile("./public/client/index.html")
-	var homeTemplate = template.Must(template.New("").Parse(string(dat)))
-	homeTemplate.Execute(w, "ws://"+r.Host+"/echo")
-}
-
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
@@ -234,7 +226,6 @@ func main() {
 	log.Println("Loaded Maps")
 
 	http.HandleFunc("/echo", echo)
-	http.HandleFunc("/", home)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 	//http.Handle("/", http.FileServer(http.Dir("./public/client")))
 

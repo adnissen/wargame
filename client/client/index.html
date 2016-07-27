@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <head>
 <meta charset="utf-8">
-<script type="text/javascript" src="/public/dist/phaser.js"></script>
-<script type="text/javascript" src="/public/dist/easyfind.min.js"></script>
+<script type="text/javascript" src="../dist/phaser.js"></script>
+<script type="text/javascript" src="../dist/easyfind.min.js"></script>
   <style type="text/css">
       body {
           margin: 0;
           background-color: #333;
           font-family: pixelFont;
       }
-      
+
       #game {
         position: absolute;
-        top: 150px;
+        top: 50px;
         left: 0;
         width: 800px;
         height: 600px;
@@ -20,7 +20,7 @@
 
       #output {
         position: absolute;
-        top: 150px;
+        top: 50px;
         left: 800px;
         color: white;
         height: 400px;
@@ -33,7 +33,7 @@
 
       #hud {
         position: absolute;
-        top: 700px;
+        top: 600px;
         left: 0;
       }
 
@@ -46,7 +46,7 @@
 
       #weapons-hud {
         position: absolute;
-        top: 550px;
+        top: 450px;
         left: 800px;
       }
 
@@ -71,7 +71,7 @@
 
       @font-face {
           font-family: pixelFont;
-          src: url(/public/client/assets/VCR_OSD_MONO_1.001.ttf);
+          src: url(../client/assets/VCR_OSD_MONO_1.001.ttf);
       }
   </style>
 <script>
@@ -105,7 +105,7 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket("{{.}}");
+        ws = new WebSocket("ws://localhost:8080/echo");
         ws.onopen = function(evt) {
             print("OPEN");
             createGame();
@@ -271,14 +271,6 @@ window.addEventListener("load", function(evt) {
       ws.send('end_turn');
     }
 
-    document.getElementById("close").onclick = function(evt) {
-        if (!ws) {
-            return false;
-        }
-        ws.close();
-        return false;
-    };
-
     function createGame(){
       var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
       //message = JSON.parse(message.Message);
@@ -386,49 +378,49 @@ window.addEventListener("load", function(evt) {
         console.log("loaded: " + fullyLoaded);
       }, this);
       //
-      game.load.image('tile_outline', '/public/client/assets/sprites/tiles/tile_outline.png');
-      game.load.image('tile_outline_red', '/public/client/assets/sprites/tiles/tile_outline_red.png');
-      game.load.image('tile_outline_blue', '/public/client/assets/sprites/tiles/tile_outline_blue.png');
-      game.load.image('red_overlay', '/public/client/assets/sprites/tiles/red_overlay.png');
-      game.load.image('purple_overlay', '/public/client/assets/sprites/tiles/purple_overlay.png');
-      game.load.image('white_overlay', '/public/client/assets/sprites/tiles/white_overlay.png');
-      game.load.image('flag', '/public/client/assets/sprites/flag.png');
-      game.load.image('flag_red', '/public/client/assets/sprites/flag_red.png');
-      game.load.image('flag_blue', '/public/client/assets/sprites/flag_blue.png');
-      game.load.image('grass1', '/public/client/assets/sprites/tiles/grass1.png');
-      game.load.image('mountain1', '/public/client/assets/sprites/tiles/mountain1.png');
-      game.load.image('forest1', '/public/client/assets/sprites/tiles/forest1.png');
-      game.load.image('water1', '/public/client/assets/sprites/tiles/water1.png');
-      game.load.image('castle1', '/public/client/assets/sprites/tiles/castle1.png');
-      game.load.image('blank', '/public/client/assets/sprites/tiles/blank.png');
-      game.load.image('rock1', '/public/client/assets/sprites/tiles/rock1.png');
+      game.load.image('tile_outline', '../client/assets/sprites/tiles/tile_outline.png');
+      game.load.image('tile_outline_red', '../client/assets/sprites/tiles/tile_outline_red.png');
+      game.load.image('tile_outline_blue', '../client/assets/sprites/tiles/tile_outline_blue.png');
+      game.load.image('red_overlay', '../client/assets/sprites/tiles/red_overlay.png');
+      game.load.image('purple_overlay', '../client/assets/sprites/tiles/purple_overlay.png');
+      game.load.image('white_overlay', '../client/assets/sprites/tiles/white_overlay.png');
+      game.load.image('flag', '../client/assets/sprites/flag.png');
+      game.load.image('flag_red', '../client/assets/sprites/flag_red.png');
+      game.load.image('flag_blue', '../client/assets/sprites/flag_blue.png');
+      game.load.image('grass1', '../client/assets/sprites/tiles/grass1.png');
+      game.load.image('mountain1', '../client/assets/sprites/tiles/mountain1.png');
+      game.load.image('forest1', '../client/assets/sprites/tiles/forest1.png');
+      game.load.image('water1', '../client/assets/sprites/tiles/water1.png');
+      game.load.image('castle1', '../client/assets/sprites/tiles/castle1.png');
+      game.load.image('blank', '../client/assets/sprites/tiles/blank.png');
+      game.load.image('rock1', '../client/assets/sprites/tiles/rock1.png');
 
       //units
-      game.load.image('archerguy_red', '/public/client/assets/sprites/units/archerguy_red.png');
-      game.load.image('archerguy_blue', '/public/client/assets/sprites/units/archerguy_blue.png');
-      game.load.image('stout_guard_blue', '/public/client/assets/sprites/units/stout_guard_blue.png');
-      game.load.image('stout_guard_red', '/public/client/assets/sprites/units/stout_guard_red.png');
-      game.load.image('spearman_red', '/public/client/assets/sprites/units/spearman_red.png');
-      game.load.image('spearman_blue', '/public/client/assets/sprites/units/spearman_blue.png');
-      game.load.image('mounted_knight_red', '/public/client/assets/sprites/units/mounted_knight_red.png');
-      game.load.image('mounted_knight_blue', '/public/client/assets/sprites/units/mounted_knight_blue.png');
-      game.load.image('farmer_man_red', '/public/client/assets/sprites/units/farmer_man_red.png');
-      game.load.image('farmer_man_blue', '/public/client/assets/sprites/units/farmer_man_blue.png');
+      game.load.image('archerguy_red', '../client/assets/sprites/units/archerguy_red.png');
+      game.load.image('archerguy_blue', '../client/assets/sprites/units/archerguy_blue.png');
+      game.load.image('stout_guard_blue', '../client/assets/sprites/units/stout_guard_blue.png');
+      game.load.image('stout_guard_red', '../client/assets/sprites/units/stout_guard_red.png');
+      game.load.image('spearman_red', '../client/assets/sprites/units/spearman_red.png');
+      game.load.image('spearman_blue', '../client/assets/sprites/units/spearman_blue.png');
+      game.load.image('mounted_knight_red', '../client/assets/sprites/units/mounted_knight_red.png');
+      game.load.image('mounted_knight_blue', '../client/assets/sprites/units/mounted_knight_blue.png');
+      game.load.image('farmer_man_red', '../client/assets/sprites/units/farmer_man_red.png');
+      game.load.image('farmer_man_blue', '../client/assets/sprites/units/farmer_man_blue.png');
 
       //tiles
-      game.load.image('river1', '/public/client/assets/sprites/tiles/river1.png');
-      game.load.image('river2', '/public/client/assets/sprites/tiles/river2.png');
-      game.load.image('river3', '/public/client/assets/sprites/tiles/river3.png');
-      game.load.image('river4', '/public/client/assets/sprites/tiles/river4.png');
-      game.load.image('river5', '/public/client/assets/sprites/tiles/river5.png');
-      game.load.image('river6', '/public/client/assets/sprites/tiles/river6.png');
-      game.load.image('river7', '/public/client/assets/sprites/tiles/river7.png');
-      game.load.image('river8', '/public/client/assets/sprites/tiles/river8.png');
-      game.load.image('river9', '/public/client/assets/sprites/tiles/river9.png');
-      game.load.image('river10', '/public/client/assets/sprites/tiles/river10.png');
-      game.load.image('river11', '/public/client/assets/sprites/tiles/river11.png');
-      game.load.image('river12', '/public/client/assets/sprites/tiles/river12.png');
-      game.load.image('river13', '/public/client/assets/sprites/tiles/river13.png');
+      game.load.image('river1', '../client/assets/sprites/tiles/river1.png');
+      game.load.image('river2', '../client/assets/sprites/tiles/river2.png');
+      game.load.image('river3', '../client/assets/sprites/tiles/river3.png');
+      game.load.image('river4', '../client/assets/sprites/tiles/river4.png');
+      game.load.image('river5', '../client/assets/sprites/tiles/river5.png');
+      game.load.image('river6', '../client/assets/sprites/tiles/river6.png');
+      game.load.image('river7', '../client/assets/sprites/tiles/river7.png');
+      game.load.image('river8', '../client/assets/sprites/tiles/river8.png');
+      game.load.image('river9', '../client/assets/sprites/tiles/river9.png');
+      game.load.image('river10', '../client/assets/sprites/tiles/river10.png');
+      game.load.image('river11', '../client/assets/sprites/tiles/river11.png');
+      game.load.image('river12', '../client/assets/sprites/tiles/river12.png');
+      game.load.image('river13', '../client/assets/sprites/tiles/river13.png');
 
     }
 
@@ -1134,35 +1126,23 @@ window.addEventListener("load", function(evt) {
 </script>
 </head>
 <body>
-<table>
-<tr><td valign="top" width="50%">
-<p>Click "Open" to create a connection to the server,
-"Send" to send a message to the server and "Close" to close the connection.
-You can change the message and send multiple times.
-<p>
-<form>
 <button id="open">Open</button>
-<button id="close">Close</button>
 <p><input id="input" type="text" value="new">
 <button id="send">Send</button>
-<br>
-</form>
 <button id="endturn">End Turn</button>
-</td><td valign="top" width="50%">
 <div id="weapons"></div>
-</td></tr></table>
 <div id="game">
 
 </div>
 <div id="output"></div>
 <div id="hud">
-<img src="public/client/assets/hud.png">
+<img src="../client/assets/hud.png">
 <div id="hud-output"></div>
 <div id="stat-output"></div>
 </img>
 </div>
 <div id="weapons-hud">
-  <img src="public/client/assets/weaponshud.png">
+  <img src="../client/assets/weaponshud.png">
   <div id="weapons-output"></div>
   </img>
 </div>
