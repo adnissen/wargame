@@ -9,10 +9,13 @@
           background-color: #333;
           font-family: pixelFont;
       }
+      
       #game {
         position: absolute;
         top: 150px;
         left: 0;
+        width: 800px;
+        height: 600px;
       }
 
       #output {
@@ -151,6 +154,9 @@ window.addEventListener("load", function(evt) {
                   cursor = game.add.sprite(0, 0, 'tile_outline_' + myColor);
                   clearInterval(t);
                 }, 100);
+                break;
+              case 'game_points_update':
+                var m = JSON.parse(message.Message);
                 break;
               case 'game_move':
                 var m = JSON.parse(message.Message);

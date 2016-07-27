@@ -22,6 +22,7 @@ import (
 type GameStat struct {
 	Armies           []army.Army
 	Players          []*gameclient.GameClient
+	Points           []int
 	Uid              uuid.UUID
 	Status           string
 	CurrentTurn      int
@@ -231,6 +232,12 @@ func (g *GameStat) UseWeapon(u *units.Unit, target *units.Unit, w *units.Weapon,
 	}
 
 	return used, damage, roll
+}
+
+func (g *GameStat) AwardPoints(index int, points int) {
+	g.Points[index] += points
+	j, _ := json.Marshal(g.Points)
+	g.SendMessageToAllPlayers("game_points_update", j)
 }
 
 func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.Weapon) (bool, int, int) {

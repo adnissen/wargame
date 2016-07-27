@@ -27,13 +27,16 @@ import (
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
 
-var upgrader = websocket.Upgrader{}               // use default options
 var clients = make([]*gameclient.GameClient, 100) // represents the max number of players this server will run
 var runningGames = make(map[string]*gamestat.GameStat)
 
 type ClientMessage struct {
 	MessageType string
 	Message     string
+}
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
 func sendMessageToAllClients(m []byte) {
