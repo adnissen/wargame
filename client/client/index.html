@@ -58,6 +58,9 @@
       }
 
       #endturn {
+        position: absolute;
+        top: 20px;
+        left: 400px;
         display: none;
       }
 
@@ -101,13 +104,13 @@ window.addEventListener("load", function(evt) {
       else output.innerHTML = '';
     };
 
-    document.getElementById("open").onclick = function(evt) {
+    var makeConnection = function(event) {
         if (ws) {
             return false;
         }
         ws = new WebSocket("ws://localhost:8080/echo");
         ws.onopen = function(evt) {
-            print("OPEN");
+            //print("OPEN");
             createGame();
         }
         ws.onclose = function(evt) {
@@ -125,8 +128,9 @@ window.addEventListener("load", function(evt) {
                 break;
               case 'game_end':
                 var winner = JSON.parse(message.Message).winner;
+                console.log("WINNER IS " + winner);
                 if (winner == myTeam) print("You won!");
-                else print ("You lost.");
+                else print("You lost.");
                 clearMap();
                 inGame = false;
                 break;
@@ -250,6 +254,8 @@ window.addEventListener("load", function(evt) {
         }
         return false;
     };
+
+    makeConnection();
 
     document.getElementById("send").onclick = function(evt) {
         if (!ws) {
@@ -422,6 +428,7 @@ window.addEventListener("load", function(evt) {
       game.load.image('river12', '../client/assets/sprites/tiles/river12.png');
       game.load.image('river13', '../client/assets/sprites/tiles/river13.png');
 
+      game.load.image('mmbg', '../client/assets/mainmenubackground.png');
     }
 
     function resetActions() {
@@ -955,6 +962,11 @@ window.addEventListener("load", function(evt) {
       //debugger;
     }
 
+    function displayMainMenu(){
+      clearMap();
+      game.add.sprite(0, 0, 'mmbg');
+    }
+
     function newMap() {
       clearMap();
       tileArray = createMapArray(26, 14);
@@ -981,6 +993,8 @@ window.addEventListener("load", function(evt) {
       game.world.scale.set(1);
       game.camera.bounds = undefined;
       game.stage.disableVisibilityChange = true;
+
+      displayMainMenu();
     }
 
     function exportMap(){
@@ -1126,13 +1140,11 @@ window.addEventListener("load", function(evt) {
 </script>
 </head>
 <body>
-<button id="open">Open</button>
 <p><input id="input" type="text" value="new">
 <button id="send">Send</button>
 <button id="endturn">End Turn</button>
 <div id="weapons"></div>
 <div id="game">
-
 </div>
 <div id="output"></div>
 <div id="hud">

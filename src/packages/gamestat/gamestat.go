@@ -100,7 +100,7 @@ func (g *GameStat) PlayerDisconnect(dc *gameclient.GameClient) {
 	//logic to clean up the game here, but for the time being w/e
 	g.SendMessageToAllPlayers("announce", []byte("Player "+strconv.Itoa(g.GetPlayerIndex(dc))+" has left!"))
 	for k, _ := range g.Players {
-		if g.Players[k].IsStillConnected() {
+		if g.Players[k].IsStillConnected() && g.Players[k] != dc {
 			g.EndGame(g.Players[k])
 			return
 		}
@@ -111,9 +111,6 @@ func (g *GameStat) EndGame(winner *gameclient.GameClient) {
 	for k, _ := range g.Players {
 		if g.Players[k].IsStillConnected() {
 			g.Players[k].ResetCurrentGame()
-		}
-		if g.Players[k] == winner {
-
 		}
 	}
 	ret := map[string]interface{}{"winner": strconv.Itoa(g.GetPlayerIndex(winner))}

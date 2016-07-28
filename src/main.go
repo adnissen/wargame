@@ -113,6 +113,8 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	newClient.SendMessage(units.SquadInformation())
 	newClient.SendMessage(newA.ArmyInformation())
 
+	newClient.SendMessageOfType("announce", []byte("Welcome to ElderRune!"))
+
 	findMatches()
 	if err != nil {
 		log.Print("upgrade:", err)
