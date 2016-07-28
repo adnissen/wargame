@@ -231,6 +231,7 @@ window.addEventListener("load", function(evt) {
                   print("miss!");
                   var text = "miss!";
                 }
+                t.updateHitpoints();
                 var obj = game.add.text(txtX, txtY, text, style);
                 activeNotifications.push(obj);
                 selectedUnit.showInfo();
@@ -530,7 +531,8 @@ window.addEventListener("load", function(evt) {
       this.leader = params.leader || false;
       this.uid = params.Uid;
       this.attributes = params.Attributes;
-
+      var style = { font: "20px pixelFont", fill: "red", boundsAlignH: "center", boundsAlignV: "middle" };
+      this.hpsprite = this.sprite.addChild(game.make.text(TILESIZE - 15, TILESIZE - 15, this.attributes.Hps, style))
       tileArray[this.x][this.y].unit = this.uid;
 
       var self = this;
@@ -543,6 +545,10 @@ window.addEventListener("load", function(evt) {
 
      self.distanceToTile = function(x, y) {
        return Math.abs(self.x - x) + Math.abs(self.y - y);
+     }
+
+     self.updateHitpoints = function() {
+       this.hpsprite.setText(self.attributes.Hps);
      }
 
      self.hasSightTo = function(x, y) {
