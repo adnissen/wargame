@@ -71,26 +71,26 @@ func (u *Unit) SetPos(x int, y int) {
 }
 
 func LoadWeapons() {
-	WeaponList[0] = Weapon{Id: 0, DisplayName: "Longbow", Key: "longbow", MinRng: 2, Rng: 5, Atk: 10, Dmg: 7, Uses: 15, UsesRemaining: 15}
-	WeaponList[1] = Weapon{Id: 1, DisplayName: "Hunter's Bow", Key: "longbow", MinRng: 2, Rng: 3, Atk: 11, Dmg: 10, Uses: 99, UsesRemaining: 99}
-	WeaponList[2] = Weapon{Id: 2, DisplayName: "Short Sword", Key: "short_sword", Rng: 1, Atk: 7, Dmg: 7, Uses: 99, UsesRemaining: 99}
-	WeaponList[3] = Weapon{Id: 3, DisplayName: "Lance", Key: "lance", Rng: 1, Atk: 13, Dmg: 10, Uses: 5, UsesRemaining: 5}
-	WeaponList[4] = Weapon{Id: 4, DisplayName: "Spear", Key: "spear", Rng: 1, Atk: 10, Dmg: 6, Uses: 99, UsesRemaining: 99}
-	WeaponList[5] = Weapon{Id: 5, DisplayName: "Long Sword", Key: "longsword", Rng: 1, Atk: 10, Dmg: 8, Uses: 99, UsesRemaining: 99}
+	WeaponList[0] = Weapon{Id: 0, DisplayName: "Longbow", Key: "longbow", MinRng: 2, Rng: 5, Atk: 10, Dmg: 3, Uses: 15, UsesRemaining: 15}
+	WeaponList[1] = Weapon{Id: 1, DisplayName: "Hunter's Bow", Key: "longbow", MinRng: 2, Rng: 3, Atk: 11, Dmg: 2, Uses: 99, UsesRemaining: 99}
+	WeaponList[2] = Weapon{Id: 2, DisplayName: "Short Sword", Key: "short_sword", Rng: 1, Atk: 7, Dmg: 2, Uses: 99, UsesRemaining: 99}
+	WeaponList[3] = Weapon{Id: 3, DisplayName: "Lance", Key: "lance", Rng: 1, Atk: 13, Dmg: 5, Uses: 5, UsesRemaining: 5}
+	WeaponList[4] = Weapon{Id: 4, DisplayName: "Spear", Key: "spear", Rng: 1, Atk: 10, Dmg: 4, Uses: 99, UsesRemaining: 99}
+	WeaponList[5] = Weapon{Id: 5, DisplayName: "Long Sword", Key: "longsword", Rng: 1, Atk: 10, Dmg: 3, Uses: 99, UsesRemaining: 99}
 }
 
 func LoadUnits() {
 	//BE CAREFUL ABOUT CHANGING THIS!!
-	UnitList[0] = Unit{Id: 0, Key: "stout_guard", DisplayName: "Bromuk", Description: "", Attributes: UnitAttributes{Def: 18, Amr: 2, Spd: 3, Hps: 15, WeaponIds: []int{5}}, CardText: ""}
-	UnitList[1] = Unit{Id: 1, Key: "stout_guard", DisplayName: "Stout Guard", Description: "", Attributes: UnitAttributes{Def: 18, Amr: 0, Spd: 3, Hps: 13, WeaponIds: []int{5}}}
+	UnitList[0] = Unit{Id: 0, Key: "stout_guard", DisplayName: "Bromuk", Description: "", Value: 5, Attributes: UnitAttributes{Def: 18, Amr: 2, Spd: 3, Hps: 15, WeaponIds: []int{5}}, CardText: ""}
+	UnitList[1] = Unit{Id: 1, Key: "stout_guard", DisplayName: "Stout Guard", Description: "", Value: 3, Attributes: UnitAttributes{Def: 18, Amr: 0, Spd: 3, Hps: 13, WeaponIds: []int{5}}}
 
-	UnitList[2] = Unit{Id: 2, Key: "archerguy", DisplayName: "Corath", Description: "", Attributes: UnitAttributes{Def: 15, Amr: 2, Spd: 4, Hps: 15, WeaponIds: []int{0, 2}}}
-	UnitList[3] = Unit{Id: 3, Key: "archerguy", DisplayName: "Mysterious Archer", Description: "", Attributes: UnitAttributes{Def: 15, Amr: 0, Spd: 3, Hps: 10, WeaponIds: []int{0, 2}}}
+	UnitList[2] = Unit{Id: 2, Key: "archerguy", DisplayName: "Corath", Description: "", Value: 5, Attributes: UnitAttributes{Def: 15, Amr: 2, Spd: 4, Hps: 15, WeaponIds: []int{0, 2}}}
+	UnitList[3] = Unit{Id: 3, Key: "archerguy", DisplayName: "Mysterious Archer", Value: 4, Description: "", Attributes: UnitAttributes{Def: 15, Amr: 0, Spd: 3, Hps: 10, WeaponIds: []int{0, 2}}}
 
-	UnitList[4] = Unit{Id: 4, Key: "spearman", DisplayName: "Wild Spearman", Description: "", Attributes: UnitAttributes{Keywords: []string{"+5/+4 v mounted"}, Def: 16, Amr: 0, Spd: 4, Hps: 14, WeaponIds: []int{4}}}
-	UnitList[6] = Unit{Id: 6, Key: "archerguy", DisplayName: "Wild Hunter", Description: "", Attributes: UnitAttributes{Def: 14, Amr: 0, Spd: 4, Hps: 11, WeaponIds: []int{1}}}
+	UnitList[4] = Unit{Id: 4, Key: "spearman", DisplayName: "Wild Spearman", Value: 5, Description: "", Attributes: UnitAttributes{Keywords: []string{"+5/+4 v mounted"}, Def: 16, Amr: 0, Spd: 4, Hps: 14, WeaponIds: []int{4}}}
+	UnitList[6] = Unit{Id: 6, Key: "archerguy", DisplayName: "Wild Hunter", Value: 5, Description: "", Attributes: UnitAttributes{Def: 14, Amr: 0, Spd: 4, Hps: 11, WeaponIds: []int{1}}}
 
-	UnitList[5] = Unit{Id: 5, Key: "mounted_knight", DisplayName: "Thunder Cavalry", Attributes: UnitAttributes{Keywords: []string{"mounted"}, Def: 10, Amr: 1, Spd: 5, Hps: 10, WeaponIds: []int{2, 3}}}
+	UnitList[5] = Unit{Id: 5, Key: "mounted_knight", DisplayName: "Thunder Cavalry", Value: 6, Attributes: UnitAttributes{Keywords: []string{"mounted"}, Def: 10, Amr: 1, Spd: 5, Hps: 10, WeaponIds: []int{2, 3}}}
 }
 
 func LoadSquads() {

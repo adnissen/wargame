@@ -300,6 +300,7 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 			delete(g.UnitActionCounts, defender.Uid.String())
 			delete(g.UnitCombatCounts, defender.Uid.String())
 			g.GetTile(defender.X, defender.Y).Unit = nil
+			g.AwardPoints(attacker.Team, defender.Value)
 		}
 	}
 	g.UnitCombatCounts[attacker.Uid.String()] -= 1
@@ -412,6 +413,27 @@ func (g *GameStat) SpawnAllUnits() {
 	}
 }
 
+func (g *GameStat) CheckForWinner() *gameclient.GameClient {
+	var p1win int
+	var p2win int
+	for i, s := range g.Points {
+		if s >= 30 {
+			if i == 0 {
+				p1win = s
+			} else {
+				p2win = s
+			}
+		}
+	}
+	if p1win > p2win {
+		return g.Players[0]
+	} else if p2win > p1win {
+		return g.Players[1]
+	} else {
+		return nil
+	}
+}
+
 func (g *GameStat) EndTurn(c *gameclient.GameClient) {
 	if c != g.Players[g.CurrentTurn] {
 		return
@@ -429,7 +451,12 @@ func (g *GameStat) EndTurn(c *gameclient.GameClient) {
 			}
 		}
 	}
-	g.SendMessageToAllPlayers("game_turn", []byte(strconv.Itoa(g.CurrentTurn)))
+	w := g.CheckForWinner()
+	if w != nil {
+		g.EndGame(w)
+	} else {
+		g.SendMessageToAllPlayers("game_turn", []byte(strconv.Itoa(g.CurrentTurn)))
+	}
 }
 
 func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat {

@@ -531,6 +531,7 @@ window.addEventListener("load", function(evt) {
       this.leader = params.leader || false;
       this.uid = params.Uid;
       this.attributes = params.Attributes;
+      this.value = params.Value;
       var style = { font: "20px pixelFont", fill: "red", boundsAlignH: "center", boundsAlignV: "middle" };
       this.hpsprite = this.sprite.addChild(game.make.text(TILESIZE - 15, TILESIZE - 15, this.attributes.Hps, style))
       tileArray[this.x][this.y].unit = this.uid;
@@ -659,6 +660,7 @@ window.addEventListener("load", function(evt) {
        print("defense: " + self.attributes.Def, 'stat-output');
        print("terrain bonus: " + tileArray[self.x][self.y].defenseBonus(), 'stat-output');
        print("armor: " + self.attributes.Amr, 'stat-output');
+       print("value: " + self.value, 'stat-output');
 
        print("weapons:", "weapons-output");
        print("", "weapons-output");
