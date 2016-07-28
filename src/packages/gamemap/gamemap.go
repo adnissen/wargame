@@ -19,7 +19,7 @@ type Tile struct {
 	Castle       bool
 	Capturable   bool
 	BlocksVision bool
-	Objective    Objective
+	Objective    *Objective
 	Owner        int
 	X            int
 	Y            int

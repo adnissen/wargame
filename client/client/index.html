@@ -157,10 +157,12 @@ window.addEventListener("load", function(evt) {
                   loadUnits(m);
                   cursor = game.add.sprite(0, 0, 'tile_outline_' + myColor);
                   clearInterval(t);
+                  updateScores(0, 0);
                 }, 100);
                 break;
               case 'game_points_update':
                 var m = JSON.parse(message.Message);
+                updateScores(m[0], m[1]);
                 break;
               case 'game_move':
                 var m = JSON.parse(message.Message);
@@ -277,6 +279,18 @@ window.addEventListener("load", function(evt) {
       ws.send('end_turn');
     }
 
+    function updateScores(p1, p2) {
+      if (guiRedScore){
+        guiRedScore.destroy();
+        guiBlueScore.destroy();
+      }
+      var style = { font: "24px pixelFont", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
+      guiRedScore = game.add.text(10, 10, "Red Score: " + p1, style);
+      guiBlueScore = game.add.text(600, 10, "Blue Score: " + p2, style);
+      guiRedScore.fixedToCamera = true;
+      guiBlueScore.fixedToCamera = true;
+    }
+
     function createGame(){
       var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
       //message = JSON.parse(message.Message);
@@ -311,6 +325,8 @@ window.addEventListener("load", function(evt) {
     var fullyLoaded = false;
     var weaponsUi = document.getElementById("weapons");
     var calculatingPaths = {};
+    var guiRedScore;
+    var guiBlueScore;
 
     function myTurn() {
       return currentTurn === myTeam;

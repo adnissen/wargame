@@ -299,6 +299,7 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 		if defender.Attributes.Hps <= 0 {
 			delete(g.UnitActionCounts, defender.Uid.String())
 			delete(g.UnitCombatCounts, defender.Uid.String())
+			g.GetTile(defender.X, defender.Y).Unit = nil
 		}
 	}
 	g.UnitCombatCounts[attacker.Uid.String()] -= 1
@@ -421,6 +422,13 @@ func (g *GameStat) EndTurn(c *gameclient.GameClient) {
 		g.CurrentTurn = 0
 	}
 	g.ResetActions()
+	for _, v := range g.Map.Map {
+		for _, t := range v {
+			if t.Objective != nil && t.Unit != nil && g.CurrentTurn == t.Unit.Team {
+				g.AwardPoints(t.Unit.Team, 2)
+			}
+		}
+	}
 	g.SendMessageToAllPlayers("game_turn", []byte(strconv.Itoa(g.CurrentTurn)))
 }
 
@@ -432,6 +440,7 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 	aary := []army.Army{army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(2), units.CreateSquad(0), units.CreateSquad(2)}}, army.Army{Squads: []units.Squad{units.CreateSquad(3), units.CreateSquad(3), units.CreateSquad(1)}}}
 	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gamemap.GetCustomMap()}
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
+	gstat.Points = make([]int, 2)
 	gstat.SetCurrentGameForAllPlayers()
 	gstat.SendMessageToAllPlayers("map_data", gstat.GetMapJson())
 	gstat.SpawnAllUnits()
