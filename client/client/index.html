@@ -454,6 +454,8 @@ window.addEventListener("load", function(evt) {
       game.load.image('river13', '../client/assets/sprites/tiles/river13.png');
 
       game.load.image('mmbg', '../client/assets/mainmenubackground.png');
+      game.load.image('playbutton', '../client/assets/playbutton.png');
+      game.load.image('searchingbutton', '../client/assets/searchingbutton.png');
     }
 
     function resetActions() {
@@ -1009,6 +1011,19 @@ window.addEventListener("load", function(evt) {
     function displayMainMenu(){
       clearMap();
       game.add.sprite(0, 0, 'mmbg');
+
+      var playbtn = game.add.sprite(350, 450, 'playbutton');
+      var searching = false;
+      playbtn.events.onInputDown.add(function(){
+        if (searching) {
+          ws.send('exit_queue');
+          playbtn.loadTexture('playbtn');
+        } else {
+          ws.send('find_game');
+          playbtn.loadTexture('searchingbutton');
+        }
+      });
+      playbtn.inputEnabled = true;
     }
 
     function newMap() {

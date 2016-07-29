@@ -87,7 +87,7 @@ func LoadUnits() {
 	UnitList[2] = Unit{Id: 2, Key: "archerguy", DisplayName: "Corath", Description: "", Value: 5, Attributes: UnitAttributes{Def: 15, Amr: 2, Spd: 4, Hps: 15, WeaponIds: []int{0, 2}}}
 	UnitList[3] = Unit{Id: 3, Key: "archerguy", DisplayName: "Mysterious Archer", Value: 4, Description: "", Attributes: UnitAttributes{Def: 15, Amr: 0, Spd: 3, Hps: 10, WeaponIds: []int{0, 2}}}
 
-	UnitList[4] = Unit{Id: 4, Key: "spearman", DisplayName: "Wild Spearman", Value: 5, Description: "", Attributes: UnitAttributes{Keywords: []string{"+5/+4 v mounted"}, Def: 16, Amr: 0, Spd: 4, Hps: 14, WeaponIds: []int{4}}}
+	UnitList[4] = Unit{Id: 4, Key: "spearman", DisplayName: "Wild Spearman", Value: 5, Description: "", Attributes: UnitAttributes{Keywords: []string{"+2/+3 v mounted"}, Def: 16, Amr: 0, Spd: 4, Hps: 14, WeaponIds: []int{4}}}
 	UnitList[6] = Unit{Id: 6, Key: "archerguy", DisplayName: "Wild Hunter", Value: 5, Description: "", Attributes: UnitAttributes{Def: 14, Amr: 0, Spd: 4, Hps: 11, WeaponIds: []int{1}}}
 
 	UnitList[5] = Unit{Id: 5, Key: "mounted_knight", DisplayName: "Thunder Cavalry", Value: 6, Attributes: UnitAttributes{Keywords: []string{"mounted"}, Def: 10, Amr: 1, Spd: 5, Hps: 10, WeaponIds: []int{2, 3}}}

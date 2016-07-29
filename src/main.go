@@ -26,6 +26,7 @@ import (
 var addr = flag.String("addr", "localhost:8080", "http service address")
 
 var clients = make([]*gameclient.GameClient, 100) // represents the max number of players this server will run
+var mmQueue []*gameclient.GameClient
 var runningGames = make(map[string]*gamestat.GameStat)
 
 type ClientMessage struct {
@@ -35,6 +36,19 @@ type ClientMessage struct {
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
+}
+
+func addPlayerToMMQueue(c *gameclient.GameClient) {
+	mmQueue = append(mmQueue, c)
+}
+
+func removePlayerFromMMQueue(c *gameclient.GameClient) {
+	for i := range mmQueue {
+		if mmQueue[i] == c {
+			mmQueue = append(mmQueue[:i], mmQueue[i+1:]...)
+			return
+		}
+	}
 }
 
 func sendMessageToAllClients(m []byte) {
@@ -72,19 +86,13 @@ func removeConnFromClients(c *websocket.Conn) {
 	}
 }
 
-func findMatches() {
-	var c1 *gameclient.GameClient
-	for i := range clients {
-		if clients[i] != nil && clients[i].CurrentGame.String() == "00000000-0000-0000-0000-000000000000" {
-			if c1 == nil {
-				c1 = clients[i]
-			} else {
-				fmt.Println("found match")
-				gstat := gamestat.CreateGame(c1, clients[i])
-				runningGames[gstat.Uid.String()] = gstat
-				break
-			}
-		}
+func findMatches(c *gameclient.GameClient) {
+	if len(mmQueue) != 0 && mmQueue[0] != nil {
+		g := gamestat.CreateGame(mmQueue[0], c)
+		runningGames[g.Uid.String()] = g
+		removePlayerFromMMQueue(mmQueue[0])
+	} else {
+		addPlayerToMMQueue(c)
 	}
 }
 
@@ -118,13 +126,13 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 	newClient.SendMessageOfType("announce", []byte("Welcome to Elder Runes!"))
 
-	findMatches()
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
 	}
 
 	defer func() {
+		removePlayerFromMMQueue(newClient)
 		removeConnFromClients(c)
 		c.Close()
 	}()
@@ -133,6 +141,14 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("client disconnected:", err)
 			break
+		}
+
+		if string(message) == "find_game" {
+			findMatches(newClient)
+		}
+
+		if string(message) == "exit_queue" {
+			removePlayerFromMMQueue(newClient)
 		}
 		//log.Printf("game_logic: %s", message)
 		if string(message) == "game" {
