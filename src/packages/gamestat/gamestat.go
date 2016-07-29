@@ -259,7 +259,7 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 	for _, v := range attacker.Attributes.Keywords {
 		modStr := rege.MatchString(v)
 		if modStr == true {
-			mods := strings.Split(strings.Split(v, "v")[0], "/")
+			mods := strings.Split(strings.Replace(strings.Split(v, "v")[0], " ", "", -1), "/")
 			target := strings.Split(v, "v")[1]
 			target = strings.Replace(target, " ", "", -1)
 
@@ -270,6 +270,7 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 
 					attackModifier += am
 					damageModifier += dm
+
 				}
 			}
 		}

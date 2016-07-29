@@ -72,6 +72,13 @@
         left: 250px;
       }
 
+      #card-output {
+        color: #FFF;
+        position: absolute;
+        top: 45px;
+        left: 430px;
+      }
+
       @font-face {
           font-family: pixelFont;
           src: url(../client/assets/VCR_OSD_MONO_1.001.ttf);
@@ -109,6 +116,7 @@ window.addEventListener("load", function(evt) {
             return false;
         }
         ws = new WebSocket("ws://localhost:8080/echo");
+        //ws = new WebSocket("ws://er.qrk.es:27015/echo");
         ws.onopen = function(evt) {
             //print("OPEN");
             createGame();
@@ -234,7 +242,7 @@ window.addEventListener("load", function(evt) {
                 t.updateHitpoints();
                 var obj = game.add.text(txtX, txtY, text, style);
                 activeNotifications.push(obj);
-                selectedUnit.showInfo();
+                if (selectedUnit) selectedUnit.showInfo();
                 break;
               case 'game_turn':
                 currentTurn = parseInt(message.Message);
@@ -647,6 +655,7 @@ window.addEventListener("load", function(evt) {
        clr('hud-output');
        clr('stat-output');
        clr('weapons-output');
+       clr('card-output');
        if (myTeam == self.team)
          print("friendly " + self.displayName, 'hud-output');
        else
@@ -671,6 +680,11 @@ window.addEventListener("load", function(evt) {
          print("ATK: " + w.Atk, "weapons-output");
          print("RNG: " + w.Rng, "weapons-output");
          print("DMG: " + w.Dmg, "weapons-output");
+         if (w.Keywords){
+           w.Keywords.forEach(function(kw) {
+             print(kw, "weapons-output");
+           })
+         }
          print("------------", "weapons-output");
        })
 
@@ -699,6 +713,12 @@ window.addEventListener("load", function(evt) {
            });
            print("------------", "weapons-output");
          })
+       }
+
+       if (self.attributes.Keywords) {
+         self.attributes.Keywords.forEach(function(kw){
+           print(kw, "card-output");
+         });
        }
      }
 
@@ -1175,6 +1195,7 @@ window.addEventListener("load", function(evt) {
 <img src="../client/assets/hud.png">
 <div id="hud-output"></div>
 <div id="stat-output"></div>
+<div id="card-output"></div>
 </img>
 </div>
 <div id="weapons-hud">

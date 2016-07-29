@@ -116,7 +116,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	newClient.SendMessage(units.SquadInformation())
 	newClient.SendMessage(newA.ArmyInformation())
 
-	newClient.SendMessageOfType("announce", []byte("Welcome to ElderRune!"))
+	newClient.SendMessageOfType("announce", []byte("Welcome to Elder Runes!"))
 
 	findMatches()
 	if err != nil {
