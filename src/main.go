@@ -90,6 +90,9 @@ func findMatches() {
 
 func echo(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
 	log.Printf("client connected %s", r.RemoteAddr)
 	newClient := insertConnIntoClients(c)
 
