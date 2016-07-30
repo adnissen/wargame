@@ -36,7 +36,7 @@ type Objective struct {
 	Owner int
 }
 
-var MapList = make(map[string]Map, 100)
+var MapList = make(map[string]Map)
 
 func LoadMaps() {
 	tempMap, err := ioutil.ReadFile("src/maps/test1.json")
@@ -109,15 +109,18 @@ func (m *Map) SpawnUnitOnFirstAvailable(u *units.Unit, team int) {
 }
 
 func GetMap() Map {
-	return MapList["default"]
+	d := MapList["default"]
+	return d
 }
 
 func GetCustomMap() Map {
-	_, d := MapList["save"]
-	if d {
-		return MapList["save"]
+	tempMap, err := ioutil.ReadFile("src/maps/test1.json")
+	if err != nil {
+		fmt.Println(err)
 	}
-	return MapList["default"]
+	res := Map{}
+	json.Unmarshal(tempMap, &res)
+	return res
 }
 
 func DistanceBetweenTiles(x1 int, y1 int, x2 int, y2 int) int {

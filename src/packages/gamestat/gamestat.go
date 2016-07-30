@@ -400,10 +400,6 @@ func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 
 func (g *GameStat) SpawnAllUnits() {
 	for team := range g.Armies {
-		fmt.Print("Army team: ")
-		fmt.Print(team)
-		fmt.Print("\n")
-		fmt.Println("==============")
 		for s := range g.Armies[team].Squads {
 			for k := range g.Armies[team].Squads[s].Grunts {
 				grunt := &g.Armies[team].Squads[s].Grunts[k]
@@ -466,7 +462,8 @@ func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat 
 	}
 	pary := []*gameclient.GameClient{p1, p2}
 	aary := []army.Army{army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(2), units.CreateSquad(0), units.CreateSquad(2)}}, army.Army{Squads: []units.Squad{units.CreateSquad(3), units.CreateSquad(3), units.CreateSquad(1)}}}
-	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gamemap.GetCustomMap()}
+	gmap := gamemap.GetCustomMap()
+	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gmap}
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
 	gstat.Points = make([]int, 2)
 	gstat.SetCurrentGameForAllPlayers()

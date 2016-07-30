@@ -140,6 +140,7 @@ window.addEventListener("load", function(evt) {
                 if (winner == myTeam) print("You won!");
                 else print("You lost.");
                 clearMap();
+                displayMainMenu();
                 inGame = false;
                 break;
               case 'announce':
@@ -336,6 +337,7 @@ window.addEventListener("load", function(evt) {
     var calculatingPaths = {};
     var guiRedScore;
     var guiBlueScore;
+    var searching = false;
 
     function myTurn() {
       return currentTurn === myTeam;
@@ -1011,16 +1013,16 @@ window.addEventListener("load", function(evt) {
     function displayMainMenu(){
       clearMap();
       game.add.sprite(0, 0, 'mmbg');
-
       var playbtn = game.add.sprite(350, 450, 'playbutton');
-      var searching = false;
       playbtn.events.onInputDown.add(function(){
         if (searching) {
           ws.send('exit_queue');
-          playbtn.loadTexture('playbtn');
+          playbtn.loadTexture('playbutton');
+          searching = false;
         } else {
           ws.send('find_game');
           playbtn.loadTexture('searchingbutton');
+          searching = true;
         }
       });
       playbtn.inputEnabled = true;
