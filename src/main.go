@@ -19,8 +19,12 @@ import (
 	"github.com/adnissen/wargame/src/packages/gamemap"
 	"github.com/adnissen/wargame/src/packages/gamestat"
 	"github.com/adnissen/wargame/src/packages/units"
+	"github.com/adnissen/wargame/src/packages/userpkg"
 
 	"github.com/gorilla/websocket"
+
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
@@ -248,15 +252,20 @@ func main() {
 
 	http.HandleFunc("/echo", echo)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
-	//http.Handle("/", http.FileServer(http.Dir("./public/client")))
 
-	/*ticker := time.NewTicker(time.Millisecond * 5000)
-	go func() {
-		for t := range ticker.C {
-			log.Println(t)
-			sendMessageToAllClients([]byte("Tick"))
-		}
-	}()*/
+	db, err := gorm.Open("sqlite3", "test.db")
+	if err != nil {
+		panic("failed to connect database")
+	}
+
+	//migrate the schema
+	db.AutoMigrate(&userpkg.User{})
+
+	newu := userpkg.CreateUser(db, "adn", "a@a.com", "1234test32")
+
+	if newu != nil {
+		fmt.Println("created account!")
+	}
 
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
