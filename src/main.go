@@ -168,6 +168,53 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		cm := ClientMessage{}
 		json.Unmarshal(message, &cm)
 
+		if cm.MessageType == "login" {
+			if newClient.LoggedIn() {
+				//get the user back into the previous gameclient, for now just return
+				return
+			}
+			var dat map[string]interface{}
+			if err := json.Unmarshal([]byte(cm.Message), &dat); err != nil {
+				panic(err)
+			}
+
+			username := dat["username"].(string)
+			pass := dat["password"].(string)
+
+			record := userpkg.VerifyUser(db, username, pass)
+			if record != nil {
+				newClient.User = record
+				newClient.SendMessageOfType("login_result", []byte("success"))
+			} else {
+				newClient.SendMessageOfType("login_result", []byte("failure"))
+			}
+			return
+		}
+
+		if cm.MessageType == "create_user" {
+			if newClient.LoggedIn() {
+				return
+			}
+
+			var dat map[string]interface{}
+			if err := json.Unmarshal([]byte(cm.Message), &dat); err != nil {
+				panic(err)
+			}
+
+			username := dat["username"].(string)
+			pass := dat["password"].(string)
+			email := dat["email"].(string)
+
+			record := userpkg.CreateUser(db, username, pass, email)
+			if record != nil {
+				newClient.User = record
+				newClient.SendMessageOfType("create_user_result", []byte("success"))
+			} else {
+				newClient.SendMessageOfType("create_user_result", []byte("failure"))
+			}
+			return
+		}
+
 		if cm.MessageType == "map_export_data" {
 			gamemap.InsertMap(gamemap.ImportMap(cm.Message))
 		}
@@ -236,6 +283,8 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+var db *gorm.DB
 
 func main() {
 	flag.Parse()

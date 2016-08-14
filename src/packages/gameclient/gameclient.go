@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/adnissen/wargame/src/packages/army"
+	"github.com/adnissen/wargame/src/packages/userpkg"
 	"github.com/gorilla/websocket"
 	"github.com/satori/go.uuid"
 )
@@ -12,11 +13,16 @@ type GameClient struct {
 	wbs         *websocket.Conn
 	Army        army.Army
 	CurrentGame uuid.UUID
+	User        *userpkg.User
 }
 
 type GenericResponse struct {
 	MessageType string
 	Message     string
+}
+
+func (g *GameClient) LoggedIn() bool {
+	return g.User != nil
 }
 
 func (g *GameClient) SendMessage(m []byte) {
