@@ -19,5 +19,5 @@ fi
 # set PATH so it includes user's private bin directories
 PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 
-export GOPATH=$HOME/gostuff
+export GOPATH=$HOME/gocode
 export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin

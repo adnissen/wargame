@@ -6,3 +6,5 @@ sudo chown -R root:root ./go
 sudo mv go /usr/local
 
 source ~/.profile
+
+sudo apt install gcc -y
