@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/satori/go.uuid"
+	"github.com/adnissen/go.uuid"
 )
 
 type Unit struct {

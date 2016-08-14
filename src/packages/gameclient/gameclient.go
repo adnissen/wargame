@@ -3,10 +3,10 @@ package gameclient
 import (
 	"encoding/json"
 
+	"github.com/adnissen/go.uuid"
 	"github.com/adnissen/wargame/src/packages/army"
 	"github.com/adnissen/wargame/src/packages/userpkg"
 	"github.com/adnissen/websocket"
-	"github.com/satori/go.uuid"
 )
 
 type GameClient struct {

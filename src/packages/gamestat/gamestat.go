@@ -10,13 +10,13 @@ import (
 
 	"regexp"
 
+	"github.com/adnissen/go.uuid"
 	"github.com/adnissen/wargame/src/packages/army"
 	"github.com/adnissen/wargame/src/packages/dice"
 	"github.com/adnissen/wargame/src/packages/gameclient"
 	"github.com/adnissen/wargame/src/packages/gamemap"
 	"github.com/adnissen/wargame/src/packages/los"
 	"github.com/adnissen/wargame/src/packages/units"
-	"github.com/satori/go.uuid"
 )
 
 type GameStat struct {
