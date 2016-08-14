@@ -95,11 +95,11 @@ func findMatches(c *gameclient.GameClient) {
 }
 
 func echo(w http.ResponseWriter, r *http.Request) {
+	log.Printf("client connected %s", r.RemoteAddr)
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
-	log.Printf("client connected %s", r.RemoteAddr)
 	newClient := insertConnIntoClients(c)
 
 	/*
