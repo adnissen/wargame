@@ -1,9 +1,3 @@
-// Copyright 2015 The Gorilla WebSocket Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-// +build ignore
-
 package main
 
 import (
@@ -21,10 +15,10 @@ import (
 	"github.com/adnissen/wargame/src/packages/units"
 	"github.com/adnissen/wargame/src/packages/userpkg"
 
-	"github.com/gorilla/websocket"
+	"github.com/adnissen/websocket"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/adnissen/gorm"
+	_ "github.com/adnissen/gorm/dialects/sqlite"
 )
 
 var addr = flag.String("addr", "localhost:8080", "http service address")

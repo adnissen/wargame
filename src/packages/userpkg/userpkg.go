@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"io"
 
-	"github.com/jinzhu/gorm"
+	"github.com/adnissen/gorm"
 )
 
 type User struct {

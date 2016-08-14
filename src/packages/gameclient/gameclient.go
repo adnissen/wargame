@@ -5,7 +5,7 @@ import (
 
 	"github.com/adnissen/wargame/src/packages/army"
 	"github.com/adnissen/wargame/src/packages/userpkg"
-	"github.com/gorilla/websocket"
+	"github.com/adnissen/websocket"
 	"github.com/satori/go.uuid"
 )
 
