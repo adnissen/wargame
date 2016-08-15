@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -20,6 +23,8 @@ import (
 	"github.com/adnissen/gorm"
 	_ "github.com/adnissen/gorm/dialects/sqlite"
 )
+
+var db *gorm.DB
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
 
@@ -162,9 +167,13 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		cm := ClientMessage{}
 		json.Unmarshal(message, &cm)
 
+		fmt.Println(cm)
+
 		if cm.MessageType == "login" {
 			if newClient.LoggedIn() {
 				//get the user back into the previous gameclient, for now just return
+				newClient.SendMessageOfType("create_user_result", []byte("failure"))
+
 				return
 			}
 			var dat map[string]interface{}
@@ -182,12 +191,10 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			} else {
 				newClient.SendMessageOfType("login_result", []byte("failure"))
 			}
-			return
 		}
 
 		if cm.MessageType == "create_user" {
 			if newClient.LoggedIn() {
-				return
 			}
 
 			var dat map[string]interface{}
@@ -206,7 +213,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			} else {
 				newClient.SendMessageOfType("create_user_result", []byte("failure"))
 			}
-			return
 		}
 
 		if cm.MessageType == "map_export_data" {
@@ -278,8 +284,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var db *gorm.DB
-
 func main() {
 	flag.Parse()
 	log.SetFlags(0)
@@ -296,15 +300,15 @@ func main() {
 	http.HandleFunc("/", echo)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 
-	db, err := gorm.Open("sqlite3", "test.db")
-	if err != nil {
-		panic("failed to connect database")
-	}
+	db, _ = gorm.Open("sqlite3", "test.db")
 
 	//migrate the schema
 	db.AutoMigrate(&userpkg.User{})
 
-	newu := userpkg.CreateUser(db, "adn", "a@a.com", "1234test32")
+	h := sha256.New()
+	io.WriteString(h, "1234test32")
+	s := h.Sum(nil)
+	newu := userpkg.CreateUser(db, "adn", "a@a.com", hex.EncodeToString(s))
 
 	if newu != nil {
 		fmt.Println("created account!")

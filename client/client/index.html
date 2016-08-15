@@ -3,6 +3,11 @@
 <meta charset="utf-8">
 <script type="text/javascript" src="../dist/phaser.js"></script>
 <script type="text/javascript" src="../dist/easyfind.min.js"></script>
+<script type="text/javascript" src="../dist/sha.js"></script>
+<script type="text/javascript" src="../dist/sweetalert2.min.js"></script>
+
+<link rel="stylesheet" href="../dist/sweetalert2.min.css">
+
   <style type="text/css">
       body {
           margin: 0;
@@ -85,8 +90,9 @@
       }
   </style>
 <script>
-window.addEventListener("load", function(evt) {
 
+var loginStatus = "";
+window.addEventListener("load", function(evt) {
     var output = document.getElementById("output");
     var input = document.getElementById("input");
     var ws;
@@ -115,11 +121,47 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket("ws://198.199.122.68");
-        //ws = new WebSocket("ws://localhost:8080/echo");
+        //production
+        //ws = new WebSocket("ws://198.199.122.68");
+
+        //local
+        ws = new WebSocket("ws://localhost:8080");
         ws.onopen = function(evt) {
             //print("OPEN");
-            createGame();
+            swal({
+            title: 'Login',
+            html: '<input id="username" class="swal2-input" placeholder="username" type="text"></input><br><input id="password" class="swal2-input" type="password" placeholder="password"></input>',
+            showCancelButton: true,
+            confirmButtonText: 'Submit',
+            showLoaderOnConfirm: true,
+            preConfirm: function(email) {
+              return new Promise(function(resolve, reject) {
+                loginStatus = "";
+                data = {};
+                data.MessageType = "login";
+                data.Message = {};
+                data.Message.username = document.getElementById('username').value;
+                data.Message.password = Sha256.hash(document.getElementById('password').value);
+                data.Message = JSON.stringify(data.Message);
+                data = JSON.stringify(data);
+                ws.send(data);
+                ls = setInterval(function() {
+                  if (loginStatus != "") {
+                    clearInterval(ls);
+                    if (loginStatus == "failure") {
+                      reject('invalid login!');
+                    } else {
+                      resolve();
+                    }
+                  }
+                }, 100);
+              });
+            },
+            allowOutsideClick: false
+          }).then(function(email) {
+            createGame()
+          })
+            //createGame();
         }
         ws.onclose = function(evt) {
             print("CLOSE");
@@ -129,6 +171,9 @@ window.addEventListener("load", function(evt) {
             console.log(JSON.parse(evt.data));
             var message = JSON.parse(evt.data);
             switch (message.MessageType) {
+              case 'login_result':
+                loginStatus = message.Message;
+                break;
               case 'team':
                 myTeam = parseInt(message.Message)
                 if (myTeam == 0) myColor = "red";

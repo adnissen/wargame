@@ -71,7 +71,7 @@ func (u *Unit) SetPos(x int, y int) {
 }
 
 func LoadWeapons() {
-	WeaponList[0] = Weapon{Id: 0, DisplayName: "Longbow", Key: "longbow", MinRng: 2, Rng: 5, Atk: 10, Dmg: 3, Uses: 15, UsesRemaining: 15}
+	WeaponList[0] = Weapon{Id: 0, DisplayName: "Longbow", Key: "longbow", MinRng: 2, Rng: 5, Atk: 10, Dmg: 4, Uses: 15, UsesRemaining: 15}
 	WeaponList[1] = Weapon{Id: 1, DisplayName: "Hunter's Bow", Key: "longbow", MinRng: 2, Rng: 3, Atk: 11, Dmg: 2, Uses: 99, UsesRemaining: 99}
 	WeaponList[2] = Weapon{Id: 2, DisplayName: "Short Sword", Key: "short_sword", Rng: 1, Atk: 7, Dmg: 2, Uses: 99, UsesRemaining: 99}
 	WeaponList[3] = Weapon{Id: 3, DisplayName: "Lance", Key: "lance", Rng: 1, Atk: 13, Dmg: 5, Uses: 5, UsesRemaining: 5}
@@ -90,7 +90,7 @@ func LoadUnits() {
 	UnitList[4] = Unit{Id: 4, Key: "spearman", DisplayName: "Wild Spearman", Value: 5, Description: "", Attributes: UnitAttributes{Keywords: []string{"+2/+3 v mounted"}, Def: 16, Amr: 0, Spd: 4, Hps: 14, WeaponIds: []int{4}}}
 	UnitList[6] = Unit{Id: 6, Key: "archerguy", DisplayName: "Wild Hunter", Value: 5, Description: "", Attributes: UnitAttributes{Def: 14, Amr: 0, Spd: 4, Hps: 11, WeaponIds: []int{1}}}
 
-	UnitList[5] = Unit{Id: 5, Key: "mounted_knight", DisplayName: "Thunder Cavalry", Value: 6, Attributes: UnitAttributes{Keywords: []string{"mounted"}, Def: 10, Amr: 1, Spd: 5, Hps: 10, WeaponIds: []int{2, 3}}}
+	UnitList[5] = Unit{Id: 5, Key: "mounted_knight", DisplayName: "Thunder Cavalry", Value: 6, Attributes: UnitAttributes{Keywords: []string{"mounted"}, Def: 13, Amr: 1, Spd: 5, Hps: 10, WeaponIds: []int{2, 3}}}
 }
 
 func LoadSquads() {
