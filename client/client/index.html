@@ -115,8 +115,8 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket("ws://localhost:8080/echo");
-        //ws = new WebSocket("ws://er.qrk.es:27015/echo");
+        ws = new WebSocket("ws://198.199.122.68");
+        //ws = new WebSocket("ws://localhost:8080/echo");
         ws.onopen = function(evt) {
             //print("OPEN");
             createGame();
