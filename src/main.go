@@ -293,7 +293,7 @@ func main() {
 	gamemap.LoadMaps()
 	log.Println("Loaded Maps")
 
-	http.HandleFunc("/echo", echo)
+	http.HandleFunc("/", echo)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 
 	db, err := gorm.Open("sqlite3", "test.db")
