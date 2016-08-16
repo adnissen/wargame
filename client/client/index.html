@@ -123,11 +123,10 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        //production
-        //ws = new WebSocket("ws://198.199.122.68");
 
-        //local
-        ws = new WebSocket("ws://localhost:8080");
+        if (process.env.ENV == "local") ws = new WebSocket("ws://localhost:8080"); //local
+        else ws = new WebSocket("ws://198.199.122.68");  //production
+        
         ws.onopen = function(evt) {
             //print("OPEN");
             swal({

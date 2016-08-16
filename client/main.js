@@ -17,7 +17,7 @@ function createWindow () {
   mainWindow.loadURL(`file://${__dirname}/client/index.html`)
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools()
+  if (process.env.ENV == "local") mainWindow.webContents.openDevTools() //local
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
