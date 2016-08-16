@@ -258,14 +258,11 @@ func echo(w http.ResponseWriter, r *http.Request) {
 				panic(err)
 			}
 
-			// "[[1, 2], [1, 3], [1, 4]]"
 			moves := dat["moves"].([]interface{})
-			// moves = ["[1, 2]", "[1, 3]", "[1, 4]"]
 			mvs := make([][]int, len(moves))
 			for f := 0; f < len(mvs); f++ {
 				mvs[f] = make([]int, 2)
 			}
-			// mvs = [[], [], []]
 
 			for i := range moves {
 				t := moves[i].([]interface{})

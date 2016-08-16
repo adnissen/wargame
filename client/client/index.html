@@ -103,9 +103,11 @@ window.addEventListener("load", function(evt) {
         if (id) {
           var o = document.getElementById(id);
           o.appendChild(d);
+          lastMessage[id] = message;
         } else {
           output.appendChild(d);
           output.scrollTop = output.scrollHeight;
+          lastMessage['default'] = message;
         }
     };
 
@@ -383,6 +385,7 @@ window.addEventListener("load", function(evt) {
     var guiRedScore;
     var guiBlueScore;
     var searching = false;
+    var lastMessage = {};
 
     function myTurn() {
       return currentTurn === myTeam;
@@ -1192,12 +1195,14 @@ window.addEventListener("load", function(evt) {
           }
 
           if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)){
-            DeselectRange();
-            selectedUnit = null;
-            cursor.x = -48;
-            cursor.y = -48;
-            if (myTurn()) print("It is your turn.");
-            else print("It is your opponents turn.");
+            if (lastMessage['default'] != "It is your turn." && lastMessage['default'] != "It is your opponents turn.") {
+              DeselectRange();
+              selectedUnit = null;
+              cursor.x = -48;
+              cursor.y = -48;
+              if (myTurn()) print("It is your turn.");
+              else print("It is your opponents turn.");
+            }
           }
       }
       else
