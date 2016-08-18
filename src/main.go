@@ -21,7 +21,7 @@ import (
 	"github.com/adnissen/websocket"
 
 	"github.com/adnissen/gorm"
-	_ "github.com/adnissen/gorm/dialects/sqlite"
+	_ "github.com/adnissen/gorm/dialects/postgres"
 )
 
 var db *gorm.DB
@@ -91,7 +91,7 @@ func removeConnFromClients(c *websocket.Conn) {
 
 func findMatches(c *gameclient.GameClient) {
 	if len(mmQueue) != 0 && mmQueue[0] != nil {
-		g := gamestat.CreateGame(mmQueue[0], c)
+		g := gamestat.CreateGame(db, mmQueue[0], c)
 		runningGames[g.Uid.String()] = g
 		removePlayerFromMMQueue(mmQueue[0])
 	} else {
@@ -297,10 +297,11 @@ func main() {
 	http.HandleFunc("/", echo)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 
-	db, _ = gorm.Open("sqlite3", "test.db")
+	db, _ = gorm.Open("postgres", "host=localhost user=gorm dbname=gorm sslmode=disable password=mypassword")
 
 	//migrate the schema
 	db.AutoMigrate(&userpkg.User{})
+	db.AutoMigrate(&army.Army{})
 
 	h := sha256.New()
 	io.WriteString(h, "1234test32")
@@ -309,6 +310,7 @@ func main() {
 
 	if newu != nil {
 		fmt.Println("created account!")
+		newu.AddArmy(db, army.Army{SquadIds: []int{0, 2, 0}})
 	}
 
 	log.Fatal(http.ListenAndServe(*addr, nil))

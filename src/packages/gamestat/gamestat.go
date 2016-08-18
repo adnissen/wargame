@@ -11,6 +11,7 @@ import (
 	"regexp"
 
 	"github.com/adnissen/go.uuid"
+	"github.com/adnissen/gorm"
 	"github.com/adnissen/wargame/src/packages/army"
 	"github.com/adnissen/wargame/src/packages/dice"
 	"github.com/adnissen/wargame/src/packages/gameclient"
@@ -456,12 +457,15 @@ func (g *GameStat) EndTurn(c *gameclient.GameClient) {
 	}
 }
 
-func CreateGame(p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat {
+func CreateGame(db *gorm.DB, p1 *gameclient.GameClient, p2 *gameclient.GameClient) *GameStat {
 	if !reflect.DeepEqual(p1.CurrentGame, uuid.UUID{}) || !reflect.DeepEqual(p2.CurrentGame, uuid.UUID{}) {
 		return nil
 	}
 	pary := []*gameclient.GameClient{p1, p2}
-	aary := []army.Army{army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(2), units.CreateSquad(0)}}, army.Army{Squads: []units.Squad{units.CreateSquad(3), units.CreateSquad(3), units.CreateSquad(1)}}}
+
+	aary := []army.Army{p1.User.GetArmy(db), p2.User.GetArmy(db)}
+	aary[0].PopulateArmy()
+	aary[1].PopulateArmy()
 	gmap := gamemap.GetCustomMap()
 	gstat := GameStat{Armies: aary, Players: pary, Uid: uuid.NewV4(), Map: gmap}
 	gstat.SendMessageToAllPlayers("announce", []byte("Game "+gstat.Uid.String()+" starting!"))
