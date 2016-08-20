@@ -21,6 +21,10 @@ type GenericResponse struct {
 	Message     string
 }
 
+func (g *GameClient) C() *websocket.Conn {
+	return g.wbs
+}
+
 func (g *GameClient) LoggedIn() bool {
 	return g.User != nil
 }

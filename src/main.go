@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/adnissen/wargame/src/packages/army"
 	"github.com/adnissen/wargame/src/packages/gameclient"
@@ -107,6 +108,16 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 	newClient := insertConnIntoClients(c)
+	loginTimer := time.NewTimer(time.Second * 60)
+	go func() {
+		<-loginTimer.C
+		if !newClient.LoggedIn() {
+			newClient.SendMessageOfType("announce", []byte("Failed to authenticate in time."))
+			removePlayerFromMMQueue(newClient)
+			removeConnFromClients(c)
+			c.Close()
+		}
+	}()
 
 	/*
 		  typeof("aimee") string
