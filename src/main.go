@@ -15,6 +15,7 @@ import (
 	"github.com/adnissen/wargame/src/packages/gameclient"
 	"github.com/adnissen/wargame/src/packages/gamemap"
 	"github.com/adnissen/wargame/src/packages/gamestat"
+	"github.com/adnissen/wargame/src/packages/invitecode"
 	"github.com/adnissen/wargame/src/packages/units"
 	"github.com/adnissen/wargame/src/packages/userpkg"
 
@@ -205,8 +206,9 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			username := dat["username"].(string)
 			pass := dat["password"].(string)
 			email := dat["email"].(string)
+			code := dat["code"].(string)
 
-			record := userpkg.CreateUser(db, username, pass, email)
+			record := userpkg.CreateUser(db, username, pass, email, code)
 			if record != nil {
 				newClient.User = record
 				newClient.SendMessageOfType("create_user_result", []byte("success"))
@@ -302,11 +304,13 @@ func main() {
 	//migrate the schema
 	db.AutoMigrate(&userpkg.User{})
 	db.AutoMigrate(&army.Army{})
+	db.AutoMigrate(&invitecode.InviteCode{})
 
 	h := sha256.New()
 	io.WriteString(h, "1234test32")
 	s := h.Sum(nil)
-	newu := userpkg.CreateUser(db, "adn", "a@a.com", hex.EncodeToString(s))
+	code := invitecode.CreateCode(db)
+	newu := userpkg.CreateUser(db, "adn", "a@a.com", hex.EncodeToString(s), code.Code)
 
 	if newu != nil {
 		fmt.Println("created account!")

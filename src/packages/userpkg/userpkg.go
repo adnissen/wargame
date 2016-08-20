@@ -9,17 +9,19 @@ import (
 	_ "github.com/adnissen/gorm/dialects/postgres"
 
 	"github.com/adnissen/wargame/src/packages/army"
+	"github.com/adnissen/wargame/src/packages/invitecode"
 
 	"log"
 )
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"not null;unique"`
-	Email    string `gorm:"not null;unique"`
-	Password string `gorm:"not null"`
-	Gold     int
-	Armies   []army.Army
+	Username   string `gorm:"not null;unique"`
+	Email      string `gorm:"not null;unique"`
+	Password   string `gorm:"not null"`
+	Gold       int
+	Armies     []army.Army
+	InviteCode invitecode.InviteCode
 }
 
 const (
@@ -42,6 +44,13 @@ func (u *User) GetArmy(db *gorm.DB) army.Army {
 	return armies[0]
 }
 
+func (u *User) ClaimCode(db *gorm.DB, ic *invitecode.InviteCode) bool {
+	if ic.Claim(db, u.ID) {
+		return true
+	}
+	return false
+}
+
 func HashPass(password string) (string, error) {
 	salt := []byte("superlksazjdfalsjdfe23password")
 
@@ -52,10 +61,16 @@ func HashPass(password string) (string, error) {
 	return hex.EncodeToString(hash), err
 }
 
-func CreateUser(db *gorm.DB, username string, email string, password string) *User {
+func CreateUser(db *gorm.DB, username string, email string, password string, code string) *User {
 	if len(password) < 7 {
 		return nil
 	}
+
+	ic := invitecode.VerifyCode(db, code)
+	if ic == nil {
+		return nil
+	}
+
 	hashedPass, _ := HashPass(password)
 	//hash the password eventually
 	newUser := User{Username: username, Email: email, Password: hashedPass}
@@ -64,6 +79,10 @@ func CreateUser(db *gorm.DB, username string, email string, password string) *Us
 		if err := db.Create(&newUser).Error; err != nil {
 			return nil
 		} else {
+			if !newUser.ClaimCode(db, ic) {
+				db.Delete(&newUser)
+				return nil
+			}
 			return &newUser
 		}
 	}
