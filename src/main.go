@@ -155,8 +155,18 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			removePlayerFromMMQueue(newClient)
 		}
 		//log.Printf("game_logic: %s", message)
-		if string(message) == "game" {
-			newClient.SendMessage([]byte(newClient.CurrentGame.String()))
+		if string(message) == "code" {
+			if newClient.LoggedIn() && newClient.User.Username == "adn" {
+				ret := map[string]interface{}{
+					"MessageType": "code",
+					"Message":     invitecode.CreateCode(db).Code}
+				str, err := json.Marshal(ret)
+				if err != nil {
+					fmt.Println("Error encoding JSON")
+					return
+				}
+				newClient.SendMessage([]byte(str))
+			}
 		}
 
 		if string(message) == "end_turn" {

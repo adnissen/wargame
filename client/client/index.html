@@ -126,7 +126,7 @@ window.addEventListener("load", function(evt) {
 
         if (process.env.ENV == "local") ws = new WebSocket("ws://localhost:8080"); //local
         else ws = new WebSocket("ws://198.199.122.68");  //production
-        
+
         ws.onopen = function(evt) {
             //print("OPEN");
             swal({
@@ -172,6 +172,9 @@ window.addEventListener("load", function(evt) {
             console.log(JSON.parse(evt.data));
             var message = JSON.parse(evt.data);
             switch (message.MessageType) {
+              case 'code':
+                console.log(message.Message);
+                break;
               case 'login_result':
                 loginStatus = message.Message;
                 break;
@@ -322,6 +325,9 @@ window.addEventListener("load", function(evt) {
         switch (input.value) {
           case 'new':
             newMap();
+            break;
+          case 'code':
+            ws.send('code');
             break;
           default:
             break;
