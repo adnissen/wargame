@@ -2,6 +2,7 @@ package userpkg
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"golang.org/x/crypto/scrypt"
@@ -30,6 +31,12 @@ const (
 	PW_HASH_BYTES = 64
 )
 
+func (u *User) ToJson(db *gorm.DB) []byte {
+	u.Armies = u.GetArmies(db)
+	j, _ := json.Marshal(u)
+	return j
+}
+
 func (u *User) AddArmy(db *gorm.DB, a army.Army) {
 	a.UserId = u.ID
 	newArmy := army.CreateArmy(db, a)
@@ -37,6 +44,12 @@ func (u *User) AddArmy(db *gorm.DB, a army.Army) {
 		u.Armies = append(u.Armies, *newArmy)
 		db.Save(&u)
 	}
+}
+
+func (u *User) GetArmies(db *gorm.DB) []army.Army {
+	var armies []army.Army
+	db.Model(u).Related(&armies)
+	return armies
 }
 
 func (u *User) GetArmy(db *gorm.DB) army.Army {

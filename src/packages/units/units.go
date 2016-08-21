@@ -78,6 +78,8 @@ func LoadWeapons() {
 	AddWeapon(Weapon{Id: 3, DisplayName: "Lance", Key: "lance", Rng: 1, Atk: 13, Dmg: 5, Uses: 5, UsesRemaining: 5})
 	AddWeapon(Weapon{Id: 4, DisplayName: "Spear", Key: "spear", Rng: 1, Atk: 10, Dmg: 4, Uses: 99, UsesRemaining: 99})
 	AddWeapon(Weapon{Id: 5, DisplayName: "Long Sword", Key: "longsword", Rng: 1, Atk: 10, Dmg: 3, Uses: 99, UsesRemaining: 99})
+	AddWeapon(Weapon{Id: 6, DisplayName: "Goblin Dagger", Key: "dagger", Rng: 1, Atk: 6, Dmg: 5, Uses: 99, UsesRemaining: 99})
+	AddWeapon(Weapon{Id: 7, DisplayName: "Goblin Shortbow", Key: "shortbow", Rng: 2, Atk: 8, Dmg: 5, Uses: 99, UsesRemaining: 99})
 }
 
 func LoadUnits() {
@@ -88,18 +90,21 @@ func LoadUnits() {
 	AddUnit(Unit{Id: 2, Key: "archerguy", DisplayName: "Corath", Description: "", Value: 5, Attributes: UnitAttributes{Def: 15, Amr: 2, Spd: 4, Hps: 15, WeaponIds: []int{0, 2}}})
 	AddUnit(Unit{Id: 3, Key: "archerguy", DisplayName: "Mysterious Archer", Value: 4, Description: "", Attributes: UnitAttributes{Def: 15, Amr: 0, Spd: 3, Hps: 10, WeaponIds: []int{0, 2}}})
 
-	AddUnit(Unit{Id: 4, Key: "spearman", DisplayName: "Wild Spearman", Value: 5, Description: "", Attributes: UnitAttributes{Keywords: []string{"+2/+3 v mounted"}, Def: 16, Amr: 0, Spd: 4, Hps: 14, WeaponIds: []int{4}}})
+	AddUnit(Unit{Id: 4, Key: "spearman", DisplayName: "Wild Spearman", Value: 4, Description: "", Attributes: UnitAttributes{Keywords: []string{"+2/+3 v mounted"}, Def: 16, Amr: 0, Spd: 4, Hps: 14, WeaponIds: []int{4}}})
 
-	AddUnit(Unit{Id: 5, Key: "mounted_knight", DisplayName: "Thunder Cavalry", Value: 6, Attributes: UnitAttributes{Keywords: []string{"mounted"}, Def: 13, Amr: 1, Spd: 5, Hps: 10, WeaponIds: []int{2, 3}}})
-	AddUnit(Unit{Id: 6, Key: "archerguy", DisplayName: "Wild Hunter", Value: 5, Description: "", Attributes: UnitAttributes{Def: 14, Amr: 0, Spd: 4, Hps: 11, WeaponIds: []int{1}}})
+	AddUnit(Unit{Id: 5, Key: "mounted_knight", DisplayName: "Thunder Cavalry", Value: 6, Attributes: UnitAttributes{Keywords: []string{"mounted"}, Def: 15, Amr: 1, Spd: 5, Hps: 12, WeaponIds: []int{2, 3}}})
+	AddUnit(Unit{Id: 6, Key: "wild_archer", DisplayName: "Wild Hunter", Value: 4, Description: "", Attributes: UnitAttributes{Def: 14, Amr: 0, Spd: 4, Hps: 11, WeaponIds: []int{1}}})
 
+	AddUnit(Unit{Id: 7, Key: "goblin_dagger", DisplayName: "Goblin Striker", Description: "", Value: 4, Attributes: UnitAttributes{Def: 12, Amr: 0, Spd: 4, Hps: 10, WeaponIds: []int{6}}})
+	AddUnit(Unit{Id: 8, Key: "goblin_archer", DisplayName: "Goblin Bowshooter", Description: "", Value: 4, Attributes: UnitAttributes{Def: 12, Amr: 0, Spd: 4, Hps: 10, WeaponIds: []int{7}}})
 }
 
 func LoadSquads() {
-	AddSquad(Squad{Id: 0, Cost: 10, DisplayName: "Bromuk's Defenders", LeaderId: 0, GruntIds: []int{1, 1, 1}, Factions: []int{0, 1, 2}})
-	AddSquad(Squad{Id: 1, Cost: 15, DisplayName: "Corath's Rangers", LeaderId: 2, GruntIds: []int{3, 3}, Factions: []int{0, 1, 2}})
-	AddSquad(Squad{Id: 2, Cost: 10, DisplayName: "Lost Hunters", LeaderId: 6, GruntIds: []int{4, 4}, Factions: []int{0, 1, 2}})
-	AddSquad(Squad{Id: 3, Cost: 18, DisplayName: "The Thunder Cavalry", LeaderId: 5, GruntIds: []int{5, 5}, Factions: []int{0, 1, 2}})
+	AddSquad(Squad{Id: 0, Cost: 13, DisplayName: "Bromuk's Defenders", LeaderId: 0, GruntIds: []int{1, 1, 1}, Factions: []int{0, 1, 2}})
+	AddSquad(Squad{Id: 1, Cost: 10, DisplayName: "Corath's Rangers", LeaderId: 2, GruntIds: []int{3, 3}, Factions: []int{0, 1, 2}})
+	AddSquad(Squad{Id: 2, Cost: 12, DisplayName: "Renegade Hunters", LeaderId: 6, GruntIds: []int{4, 4}, Factions: []int{0, 1, 2}})
+	AddSquad(Squad{Id: 3, Cost: 12, DisplayName: "The Thunder Cavalry", LeaderId: 5, GruntIds: []int{5, 5}, Factions: []int{0, 1, 2}})
+	AddSquad(Squad{Id: 4, Cost: 12, DisplayName: "Goblin Strike Team", LeaderId: 8, GruntIds: []int{7, 7}, Factions: []int{0, 1, 2}})
 }
 
 func AddWeapon(w Weapon) {

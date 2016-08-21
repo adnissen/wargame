@@ -108,7 +108,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println(err)
-		c.Close()
+		return
 	}
 	newClient := insertConnIntoClients(c)
 	loginTimer := time.NewTimer(time.Second * 180)
@@ -131,16 +131,11 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			reverse(a)
 	*/
 
-	newA := army.Army{Squads: []units.Squad{units.CreateSquad(0), units.CreateSquad(1), units.CreateSquad(0)}}
-
-	newClient.Army = newA
-
 	//information about the game so that the client can download it if need be
 	//(we really don't want lag in loading images and whatnot once they're in the game)
 
 	newClient.SendMessage(units.UnitInformation())
 	newClient.SendMessage(units.SquadInformation())
-	newClient.SendMessage(newA.ArmyInformation())
 
 	newClient.SendMessageOfType("announce", []byte("Welcome to Elder Runes!"))
 
@@ -159,10 +154,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("client disconnected:", err)
 			break
-		}
-
-		if string(message) == "find_game" {
-			findMatches(newClient)
 		}
 
 		if string(message) == "exit_queue" {
@@ -198,7 +189,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			if newClient.LoggedIn() {
 				//get the user back into the previous gameclient, for now just return
 				newClient.SendMessageOfType("create_user_result", []byte("failure"))
-
 				return
 			}
 			var dat map[string]interface{}
@@ -213,6 +203,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			if record != nil {
 				newClient.User = record
 				newClient.SendMessageOfType("login_result", []byte("success"))
+				newClient.SendMessageOfType("client_information", record.ToJson(db))
 			} else {
 				newClient.SendMessageOfType("login_result", []byte("failure"))
 			}
@@ -233,9 +224,22 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			if record != nil {
 				newClient.User = record
 				newClient.SendMessageOfType("create_user_result", []byte("success"))
+				record.AddArmy(db, army.Army{Name: "Humans", SquadIds: []int{0, 2, 0}})
+				record.AddArmy(db, army.Army{Name: "Goblins", SquadIds: []int{4, 3, 4}})
+				newClient.SendMessageOfType("client_information", record.ToJson(db))
 			} else {
 				newClient.SendMessageOfType("create_user_result", []byte("failure"))
 			}
+		}
+
+		if cm.MessageType == "find_game" {
+			a, err := strconv.Atoi(cm.Message)
+			if err != nil {
+				fmt.Println(err)
+				break
+			}
+			db.First(&newClient.Army, a)
+			findMatches(newClient)
 		}
 
 		if cm.MessageType == "map_export_data" {
@@ -336,7 +340,8 @@ func main() {
 
 	if newu != nil {
 		fmt.Println("created account!")
-		newu.AddArmy(db, army.Army{SquadIds: []int{0, 2, 0}})
+		newu.AddArmy(db, army.Army{Name: "Humans", SquadIds: []int{0, 2, 0}})
+		newu.AddArmy(db, army.Army{Name: "Goblins", SquadIds: []int{4, 3, 4}})
 	}
 
 	log.Fatal(http.ListenAndServe(*addr, nil))

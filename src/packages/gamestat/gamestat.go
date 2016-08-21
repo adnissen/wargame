@@ -463,7 +463,7 @@ func CreateGame(db *gorm.DB, p1 *gameclient.GameClient, p2 *gameclient.GameClien
 	}
 	pary := []*gameclient.GameClient{p1, p2}
 
-	aary := []army.Army{p1.User.GetArmy(db), p2.User.GetArmy(db)}
+	aary := []army.Army{p1.Army, p2.Army}
 	aary[0].PopulateArmy()
 	aary[1].PopulateArmy()
 	gmap := gamemap.GetCustomMap()

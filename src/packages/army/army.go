@@ -9,6 +9,7 @@ import (
 
 type Army struct {
 	gorm.Model
+	Name      string        `gorm:"not null;size:30"`
 	Squads    []units.Squad `gorm:"-"`
 	SquadIds  []int         `gorm:"-"`
 	IdsString string
@@ -41,7 +42,7 @@ func (a *Army) AfterFind() (err error) {
 }
 
 func (a *Army) PopulateArmy() {
-	for s := range a.SquadIds {
-		a.Squads = append(a.Squads, units.CreateSquad(s))
+	for _, v := range a.SquadIds {
+		a.Squads = append(a.Squads, units.CreateSquad(v))
 	}
 }

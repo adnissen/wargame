@@ -92,6 +92,8 @@
 <script>
 
 var loginStatus = "";
+var loggedIn = false;
+var clientData = {};
 window.addEventListener("load", function(evt) {
     var output = document.getElementById("output");
     var input = document.getElementById("input");
@@ -143,6 +145,7 @@ window.addEventListener("load", function(evt) {
                 if (loginStatus == "failure") {
                   reject('invalid login!');
                 } else {
+                  loggedIn = true;
                   resolve();
                 }
               }
@@ -181,6 +184,7 @@ window.addEventListener("load", function(evt) {
               if (loginStatus == "failure") {
                 reject('invalid login!');
               } else {
+                loggedIn = true;
                 resolve();
               }
             }
@@ -260,6 +264,10 @@ window.addEventListener("load", function(evt) {
                   loadMap(message);
                   clearInterval(t);
                 }, 100)
+                break;
+              case 'client_information':
+                var data = JSON.parse(message.Message);
+                clientData = data;
                 break;
               case 'game_start_army_data':
                 //window.game.stage.disableVisibilityChange = true;
@@ -548,6 +556,13 @@ window.addEventListener("load", function(evt) {
       game.load.image('mounted_knight_blue', '../client/assets/sprites/units/mounted_knight_blue.png');
       game.load.image('farmer_man_red', '../client/assets/sprites/units/farmer_man_red.png');
       game.load.image('farmer_man_blue', '../client/assets/sprites/units/farmer_man_blue.png');
+      game.load.image('goblin_dagger_blue', '../client/assets/sprites/units/goblin_dagger_blue.png');
+      game.load.image('goblin_dagger_red', '../client/assets/sprites/units/goblin_dagger_red.png');
+      game.load.image('goblin_archer_blue', '../client/assets/sprites/units/goblin_archer_blue.png');
+      game.load.image('goblin_archer_red', '../client/assets/sprites/units/goblin_archer_red.png');
+      game.load.image('wild_archer_blue', '../client/assets/sprites/units/wild_archer_blue.png');
+      game.load.image('wild_archer_red', '../client/assets/sprites/units/wild_archer_red.png');
+
 
       //tiles
       game.load.image('river1', '../client/assets/sprites/tiles/river1.png');
@@ -1132,12 +1147,42 @@ window.addEventListener("load", function(evt) {
           playbtn.loadTexture('playbutton');
           searching = false;
         } else {
-          ws.send('find_game');
-          playbtn.loadTexture('searchingbutton');
-          searching = true;
+          armySelectModal();
         }
       });
       playbtn.inputEnabled = true;
+
+
+      function armySelectModal() {
+        if (!loggedIn) {
+          return
+        }
+
+        var inputOptions = {};
+        for (var i = 0; i < clientData.Armies.length; i++) {
+          inputOptions[clientData.Armies[i].ID] = clientData.Armies[i].Name
+        }
+        swal({
+        title: 'Select Your Army',
+        input: 'select',
+        inputOptions: inputOptions,
+        inputPlaceholder: 'Army',
+        showCancelButton: true,
+        inputValidator: function(value) {
+          return new Promise(function(resolve, reject) {
+            if (value) {
+              ws.send(JSON.stringify({MessageType: "find_game", Message: value}));
+              resolve();
+            } else {
+              reject('You need to select a valid army.');
+            }
+          });
+        }
+        }).then(function(result) {
+          playbtn.loadTexture('searchingbutton');
+          searching = true;
+        })
+      }
     }
 
     function newMap() {
