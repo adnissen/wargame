@@ -119,6 +119,80 @@ window.addEventListener("load", function(evt) {
       else output.innerHTML = '';
     };
 
+    var loginModal = function() {
+        //LOGIN
+        swal({
+        title: 'Login',
+        html: '<input id="username" class="swal2-input" placeholder="username" type="text"></input><br><input id="password" class="swal2-input" type="password" placeholder="password"></input>',
+        confirmButtonText: 'Submit',
+        showLoaderOnConfirm: true,
+        preConfirm: function(email) {
+          return new Promise(function(resolve, reject) {
+            loginStatus = "";
+            data = {};
+            data.MessageType = "login";
+            data.Message = {};
+            data.Message.username = document.getElementById('username').value;
+            data.Message.password = Sha256.hash(document.getElementById('password').value);
+            data.Message = JSON.stringify(data.Message);
+            data = JSON.stringify(data);
+            ws.send(data);
+            ls = setInterval(function() {
+              if (loginStatus != "") {
+                clearInterval(ls);
+                if (loginStatus == "failure") {
+                  reject('invalid login!');
+                } else {
+                  resolve();
+                }
+              }
+            }, 100);
+          });
+        },
+        allowOutsideClick: false
+      }).then(function(email) {
+        createGame()
+      })
+    }
+
+    var createAccountModal = function(){
+      //CREATE ACCOUNT
+      swal({
+      title: 'Create Account',
+      html: '<input id="username" class="swal2-input" placeholder="username" type="text"></input><br><input id="email" class="swal2-input" placeholder="email" type="email"></input><br><input id="password" class="swal2-input" type="password" placeholder="password"></input><br><input id="invitecode" class="swal2-input" placeholder="invite code" type="text"></input>',
+      confirmButtonText: 'Submit',
+      showLoaderOnConfirm: true,
+      preConfirm: function(email) {
+        return new Promise(function(resolve, reject) {
+          loginStatus = "";
+          data = {};
+          data.MessageType = "create_user";
+          data.Message = {};
+          data.Message.username = document.getElementById('username').value;
+          data.Message.password = Sha256.hash(document.getElementById('password').value);
+          data.Message.email = document.getElementById('email').value;
+          data.Message.code = document.getElementById('invitecode').value;
+          data.Message = JSON.stringify(data.Message);
+          data = JSON.stringify(data);
+          ws.send(data);
+          ls = setInterval(function() {
+            if (loginStatus != "") {
+              clearInterval(ls);
+              if (loginStatus == "failure") {
+                reject('invalid login!');
+              } else {
+                resolve();
+              }
+            }
+          }, 100);
+        });
+      },
+      allowOutsideClick: false
+      }).then(function(email) {
+        createGame()
+      })
+    }
+
     var makeConnection = function(event) {
         if (ws) {
             return false;
@@ -128,40 +202,18 @@ window.addEventListener("load", function(evt) {
         else ws = new WebSocket("ws://198.199.122.68");  //production
 
         ws.onopen = function(evt) {
-            //print("OPEN");
-            swal({
-            title: 'Login',
-            html: '<input id="username" class="swal2-input" placeholder="username" type="text"></input><br><input id="password" class="swal2-input" type="password" placeholder="password"></input>',
+          swal({
+            title: 'Elder Runes',
+            text: "Welcome to the Elder Runes closed alpha!",
             showCancelButton: true,
-            confirmButtonText: 'Submit',
-            showLoaderOnConfirm: true,
-            preConfirm: function(email) {
-              return new Promise(function(resolve, reject) {
-                loginStatus = "";
-                data = {};
-                data.MessageType = "login";
-                data.Message = {};
-                data.Message.username = document.getElementById('username').value;
-                data.Message.password = Sha256.hash(document.getElementById('password').value);
-                data.Message = JSON.stringify(data.Message);
-                data = JSON.stringify(data);
-                ws.send(data);
-                ls = setInterval(function() {
-                  if (loginStatus != "") {
-                    clearInterval(ls);
-                    if (loginStatus == "failure") {
-                      reject('invalid login!');
-                    } else {
-                      resolve();
-                    }
-                  }
-                }, 100);
-              });
-            },
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Login',
+            cancelButtonText: 'Create Account',
             allowOutsideClick: false
-          }).then(function(email) {
-            createGame()
-          })
+          }).then(loginModal, createAccountModal)
+            //print("OPEN");
+
             //createGame();
         }
         ws.onclose = function(evt) {
@@ -176,6 +228,9 @@ window.addEventListener("load", function(evt) {
                 console.log(message.Message);
                 break;
               case 'login_result':
+                loginStatus = message.Message;
+                break;
+              case 'create_user_result':
                 loginStatus = message.Message;
                 break;
               case 'team':
@@ -315,6 +370,7 @@ window.addEventListener("load", function(evt) {
         }
         return false;
     };
+
 
     makeConnection();
 

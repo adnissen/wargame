@@ -28,7 +28,7 @@ func VerifyCode(db *gorm.DB, code string) *InviteCode {
 	if err := db.Where(&InviteCode{Code: code}).First(&ic).Error; err != nil && !ic.Redeemed {
 		return &ic
 	}
-	return &ic
+	return nil
 }
 
 func (ic *InviteCode) Claim(db *gorm.DB, id uint) bool {

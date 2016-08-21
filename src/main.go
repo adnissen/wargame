@@ -108,7 +108,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 	newClient := insertConnIntoClients(c)
-	loginTimer := time.NewTimer(time.Second * 60)
+	loginTimer := time.NewTimer(time.Second * 180)
 	go func() {
 		<-loginTimer.C
 		if !newClient.LoggedIn() {
@@ -216,9 +216,6 @@ func echo(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if cm.MessageType == "create_user" {
-			if newClient.LoggedIn() {
-			}
-
 			var dat map[string]interface{}
 			if err := json.Unmarshal([]byte(cm.Message), &dat); err != nil {
 				panic(err)

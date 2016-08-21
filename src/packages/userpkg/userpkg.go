@@ -92,6 +92,8 @@ func CreateUser(db *gorm.DB, username string, email string, password string, cod
 func VerifyUser(db *gorm.DB, username string, password string) *User {
 	hashedPass, _ := HashPass(password)
 	u := new(User)
-	db.Where(&User{Username: username, Password: hashedPass}).First(u)
+	if err := db.Where(&User{Username: username, Password: hashedPass}).First(u).Error; err != nil {
+		return nil
+	}
 	return u
 }
