@@ -29,6 +29,7 @@ import (
 var db *gorm.DB
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
+var pgpass = flag.String("pgpass", "mypassword", "postgres password")
 
 var clients = make([]*gameclient.GameClient, 100) // represents the max number of players this server will run
 var mmQueue []*gameclient.GameClient
