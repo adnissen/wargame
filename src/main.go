@@ -108,6 +108,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println(err)
+		c.Close()
 	}
 	newClient := insertConnIntoClients(c)
 	loginTimer := time.NewTimer(time.Second * 180)
