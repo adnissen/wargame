@@ -1,6 +1,7 @@
 package invitecode
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -25,10 +26,13 @@ func CreateCode(db *gorm.DB) *InviteCode {
 
 func VerifyCode(db *gorm.DB, code string) *InviteCode {
 	ic := InviteCode{}
-	if err := db.Where(&InviteCode{Code: code}).First(&ic).Error; err != nil && !ic.Redeemed {
-		return &ic
+	if err := db.Where(&InviteCode{Code: code}).First(&ic).Error; err != nil {
+		fmt.Println(err)
+		return nil
+	} else if ic.Redeemed {
+		return nil
 	}
-	return nil
+	return &ic
 }
 
 func (ic *InviteCode) Claim(db *gorm.DB, id uint) bool {
