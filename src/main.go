@@ -330,6 +330,7 @@ func main() {
 	io.WriteString(h, "1234test32")
 	s := h.Sum(nil)
 	code := invitecode.CreateCode(db)
+	fmt.Println(hex.EncodeToString(s))
 	newu := userpkg.CreateUser(db, "adn", "a@a.com", hex.EncodeToString(s), code.Code)
 
 	if newu != nil {
