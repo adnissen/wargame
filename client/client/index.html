@@ -338,6 +338,24 @@ window.addEventListener("load", function(evt) {
                 var style = { font: "32px pixelFont", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
                 var txtX = t.sprite.x + 16;
                 var txtY = t.sprite.y;
+                //temporary visual hack
+                var dist = u.distanceToTile(t.x, t.y)
+                if (dist > 1) {
+                  //ranged
+                  var atk = game.add.sprite(u.sprite.x, u.sprite.y, 'single_bullet');
+                  var tween = game.add.tween(atk).to({x: t.sprite.x, y: t.sprite.y}, 50 * dist, Phaser.Easing.Linear.None, true);
+                  tween.onComplete.add(function(){
+                    atk.destroy();
+                  });
+                } else {
+                  //melee animation
+                  var atk = game.add.sprite(t.sprite.x, t.sprite.y, 'melee_single');
+                  game.add.tween(atk.scale).to({x: 0, y: 0}, 1500, Phaser.Easing.Quintic.In, true);
+                  var tween = game.add.tween(atk).to({x: atk.x + 24, y: atk.y + 24}, 1500, Phaser.Easing.Quintic.In, true);
+                  tween.onComplete.add(function(){
+                    atk.destroy();
+                  });
+                }
                 if (damage > 0) {
                   print("Hit for " + damage + "!");
                   style.fill = "red"
@@ -580,6 +598,10 @@ window.addEventListener("load", function(evt) {
       game.load.image('river13', '../client/assets/sprites/tiles/river13.png');
       game.load.image('river14', '../client/assets/sprites/tiles/river14.png');
       game.load.image('river15', '../client/assets/sprites/tiles/river15.png');
+
+      //fx
+      game.load.image('melee_single', '../client/assets/sprites/melee_single.png');
+      game.load.image('single_bullet', '../client/assets/sprites/single_bullet.png')
 
 
       game.load.image('mmbg', '../client/assets/mainmenubackground.png');
