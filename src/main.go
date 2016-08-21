@@ -30,6 +30,7 @@ var db *gorm.DB
 
 var addr = flag.String("addr", "localhost:8080", "http service address")
 var pgpass = flag.String("pgpass", "mypassword", "postgres password")
+var pguser = flag.String("pguser", "gorm", "postgres user")
 
 var clients = make([]*gameclient.GameClient, 100) // represents the max number of players this server will run
 var mmQueue []*gameclient.GameClient
@@ -318,7 +319,7 @@ func main() {
 	http.HandleFunc("/", echo)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 
-	db, _ = gorm.Open("postgres", "host=localhost user=gorm dbname=gorm sslmode=disable password="+*pgpass)
+	db, _ = gorm.Open("postgres", "host=localhost user="+*pguser+" dbname=gorm sslmode=disable password="+*pgpass)
 
 	//migrate the schema
 	db.AutoMigrate(&userpkg.User{})
