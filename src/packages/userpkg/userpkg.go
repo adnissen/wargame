@@ -2,6 +2,7 @@ package userpkg
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"golang.org/x/crypto/scrypt"
 
@@ -68,6 +69,7 @@ func CreateUser(db *gorm.DB, username string, email string, password string, cod
 
 	ic := invitecode.VerifyCode(db, code)
 	if ic == nil {
+		fmt.Println("invalid code")
 		return nil
 	}
 
