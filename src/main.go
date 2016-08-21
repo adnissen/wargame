@@ -318,7 +318,7 @@ func main() {
 	http.HandleFunc("/", echo)
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 
-	db, _ = gorm.Open("postgres", "host=localhost user=gorm dbname=gorm sslmode=disable password=mypassword")
+	db, _ = gorm.Open("postgres", "host=localhost user=gorm dbname=gorm sslmode=disable password="+*pgpass)
 
 	//migrate the schema
 	db.AutoMigrate(&userpkg.User{})
