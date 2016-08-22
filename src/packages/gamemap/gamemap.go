@@ -11,7 +11,6 @@ import (
 
 type Tile struct {
 	TileType     string
-	Key          string
 	OverlayKey   string
 	Walkable     bool
 	Spawn        bool
@@ -27,12 +26,12 @@ type Tile struct {
 }
 
 type Map struct {
-	Map [][]Tile
+	Map     [][]Tile
+	MapJson string
 }
 
 type Objective struct {
 	Owned bool
-	Key   string
 	Owner int
 }
 
@@ -49,8 +48,48 @@ func LoadMaps() {
 
 func ImportMap(s string) Map {
 	SaveMap(s)
-	res := Map{}
-	json.Unmarshal([]byte(s), &res)
+	var dat map[string]interface{}
+	json.Unmarshal([]byte(s), &dat)
+	var res = Map{}
+	res.Map = make([][]Tile, int(dat["width"].(float64)))
+	for i := range res.Map {
+		res.Map[i] = make([]Tile, int(dat["height"].(float64)))
+	}
+	layers := dat["layers"].([]interface{})
+	for _, l := range layers {
+		layer := l.(map[string]interface{})
+		props, hasProps := layer["properties"].(map[string]interface{})
+		if hasProps {
+			for k, t := range layer["data"].([]interface{}) {
+				if t.(float64) != 0 {
+					tile, tx, ty := res.GetTileByIndex(k)
+					if val, ok := props["Walkable"]; ok {
+						tile.Walkable = val.(bool)
+					}
+					if val, ok := props["Spawn"]; ok {
+						tile.Spawn = val.(bool)
+					}
+					if val, ok := props["SpawnTeam"]; ok {
+						tile.SpawnTeam = int(val.(float64))
+					}
+					if val, ok := props["TileType"]; ok {
+						tile.TileType = val.(string)
+					}
+					if val, ok := props["BlocksVision"]; ok {
+						tile.BlocksVision = val.(bool)
+					}
+					tile.X = tx
+					tile.Y = ty
+
+					if _, ok := props["Objective"]; ok {
+						tile.Objective = &Objective{}
+					}
+				}
+			}
+		}
+	}
+
+	res.MapJson = s
 	return res
 }
 
@@ -76,6 +115,19 @@ func (t *Tile) DefenseBonus() int {
 	default:
 		return 0
 	}
+}
+
+func (m *Map) GetTileByIndex(index int) (*Tile, int, int) {
+	var count int
+	for i := range m.Map[0] {
+		for j := range m.Map {
+			if count == index {
+				return &m.Map[j][i], j, i
+			}
+			count = count + 1
+		}
+	}
+	return nil, 0, 0
 }
 
 func (t *Tile) IsOpen() bool {
@@ -118,9 +170,7 @@ func GetCustomMap() Map {
 	if err != nil {
 		fmt.Println(err)
 	}
-	res := Map{}
-	json.Unmarshal(tempMap, &res)
-	return res
+	return ImportMap(string(tempMap))
 }
 
 func DistanceBetweenTiles(x1 int, y1 int, x2 int, y2 int) int {

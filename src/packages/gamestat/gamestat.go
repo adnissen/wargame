@@ -88,8 +88,10 @@ func (g *GameStat) SetCurrentGameForAllPlayers() {
 }
 
 func (g *GameStat) GetMapJson() []byte {
-	j, _ := json.Marshal(g.Map)
-	return j
+	s := g.Map.MapJson
+	re := regexp.MustCompile(`\r?\n`)
+	s = re.ReplaceAllString(s, " ")
+	return []byte(s)
 }
 
 func (g *GameStat) GetUnitJson() []byte {

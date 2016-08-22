@@ -100,7 +100,7 @@ func LoadUnits() {
 }
 
 func LoadSquads() {
-	AddSquad(Squad{Id: 0, Cost: 13, DisplayName: "Bromuk's Defenders", LeaderId: 0, GruntIds: []int{1, 1, 1}, Factions: []int{0, 1, 2}})
+	AddSquad(Squad{Id: 0, Cost: 13, DisplayName: "Bromuk's Defenders", LeaderId: 0, GruntIds: []int{1, 1}, Factions: []int{0, 1, 2}})
 	AddSquad(Squad{Id: 1, Cost: 10, DisplayName: "Corath's Rangers", LeaderId: 2, GruntIds: []int{3, 3}, Factions: []int{0, 1, 2}})
 	AddSquad(Squad{Id: 2, Cost: 12, DisplayName: "Renegade Hunters", LeaderId: 6, GruntIds: []int{4, 4}, Factions: []int{0, 1, 2}})
 	AddSquad(Squad{Id: 3, Cost: 12, DisplayName: "The Thunder Cavalry", LeaderId: 5, GruntIds: []int{5, 5}, Factions: []int{0, 1, 2}})
