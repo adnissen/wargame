@@ -208,19 +208,40 @@ window.addEventListener("load", function(evt) {
         else ws = new WebSocket("ws://198.199.122.68");  //production
 
         ws.onopen = function(evt) {
-          swal({
-            title: 'Elder Runes',
-            text: "Welcome to the Elder Runes closed alpha!",
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Login',
-            cancelButtonText: 'Create Account',
-            allowOutsideClick: false
-          }).then(loginModal, createAccountModal)
-            //print("OPEN");
 
-            //createGame();
+          if (process.env.LOGIN && process.env.PASS){
+            loginStatus = "";
+            data = {};
+            data.MessageType = "login";
+            data.Message = {};
+            data.Message.username = process.env.LOGIN;
+            data.Message.password = Sha256.hash(process.env.PASS);
+            data.Message = JSON.stringify(data.Message);
+            data = JSON.stringify(data);
+            ws.send(data);
+            ls = setInterval(function() {
+              if (loginStatus != "") {
+                clearInterval(ls);
+                if (loginStatus == "failure") {
+                  loginModal();
+                } else {
+                  loggedIn = true;
+                  createGame()
+                }
+              }
+            }, 100);
+          } else {
+            swal({
+              title: 'Elder Runes',
+              text: "Welcome to the Elder Runes closed alpha!",
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Login',
+              cancelButtonText: 'Create Account',
+              allowOutsideClick: false
+            }).then(loginModal, createAccountModal)
+          }
         }
         ws.onclose = function(evt) {
             print("CLOSE");
@@ -314,6 +335,7 @@ window.addEventListener("load", function(evt) {
                   u.showInfo();
                   DeselectRange();
                   u.showRange();
+                  u.showButtons(u.x * TILESIZE, u.y * TILESIZE, ['move', 'attack']);
                 }
                 break;
               case 'game_use_weapon':
@@ -475,6 +497,8 @@ window.addEventListener("load", function(evt) {
     var guiBlueScore;
     var searching = false;
     var lastMessage = {};
+    var unitMenu = {};
+    unitMenu.mode = "";
 
     function myTurn() {
       return currentTurn === myTeam;
@@ -584,6 +608,8 @@ window.addEventListener("load", function(evt) {
       game.load.image('wild_archer_blue', '../client/assets/sprites/units/wild_archer_blue.png');
       game.load.image('wild_archer_red', '../client/assets/sprites/units/wild_archer_red.png');
 
+      game.load.image('icon_attack', '../client/assets/sprites/units/icon_attack.png');
+      game.load.image('icon_move', '../client/assets/sprites/units/icon_move.png');
 
       //tiles
       game.load.image('river1', '../client/assets/sprites/tiles/river1.png');
@@ -660,6 +686,8 @@ window.addEventListener("load", function(evt) {
     }
 
     var DeselectRange = function(){
+      if (unitMenu.attack) unitMenu.attack.destroy();
+      if (unitMenu.move) unitMenu.move.destroy();
       if (overlayArray) {
         var w = overlayArray.length;
         var h = overlayArray[0].length;
@@ -707,10 +735,69 @@ window.addEventListener("load", function(evt) {
       var self = this;
 
       this.sprite.events.onInputDown.add(function(){
-        self.showInfo();
-        DeselectRange();
-        self.showRange();
+        if (selectedUnit && selectedUnit.team == myTeam && unitMenu.mode == "attack" && self.team != myTeam && selectedUnit.combatCount > 0 && myTurn()) {
+          selectedUnit.attributes.Weapons.forEach(function(w){
+            print("ATTACK with:", "weapons-output");
+            print("------------", "weapons-output");
+            print(w.DisplayName, "weapons-output");
+            print("Durability: " + w.UsesRemaining, "weapons-output");
+            print("ATK: " + w.Atk + " (+" + tileArray[self.x][self.y].attackModifier() + ")", "weapons-output");
+            print("RNG: " + w.Rng, "weapons-output");
+            print("DMG: " + w.Dmg + " (+" + tileArray[self.x][self.y].damageModifier() + ")", "weapons-output");
+            print("HIT: " + 100 - ((self.attributes.Def - w.Atk) * 5) + "%", "weapons-output");
+            var useBtn = '<button id="' + w.Uid + '">Use</button>';
+            print(useBtn, "weapons-output");
+            document.getElementById(w.Uid).addEventListener("click", function(){
+              var ret = {};
+              ret.messageType = "game_use_weapon";
+              ret.message = {};
+              ret.message.uid = selectedUnit.uid;
+              ret.message.target = self.uid;
+              ret.message.weapon = w.Uid;
+              ret.message = JSON.stringify(ret.message)
+              ws.send(JSON.stringify(ret));
+              console.log("attacked with weapon " + w.Uid);
+            });
+            print("------------", "weapons-output");
+          })
+        } else {
+          self.showInfo();
+          DeselectRange();
+          self.showRange();
+          self.showButtons(self.x * TILESIZE, self.y * TILESIZE, ['move', 'attack']);
+          cursor.x = self.x * TILESIZE;
+          cursor.y = self.y * TILESIZE;
+          selectedUnit = self;
+        }
       });
+
+      self.showButtons = function(xx, yy, opts) {
+        if (self.team != myTeam) return;
+
+        unitMenu.mode = "";
+        if (unitMenu.attack) unitMenu.attack.destroy();
+        if (unitMenu.move) unitMenu.move.destroy();
+
+        if (opts.indexOf('attack') != -1 && self.combatCount > 0) {
+          unitMenu.attack = game.add.sprite(xx, yy - 30, 'icon_attack');
+          unitMenu.attack.inputEnabled = true;
+          unitMenu.attack.events.onInputDown.add(function(){
+            unitMenu.mode = "attack";
+            DeselectRange();
+            self.showRange();
+          })
+        }
+
+        if (opts.indexOf('move') != -1 && self.actionCount > 0) {
+          unitMenu.move = game.add.sprite(xx + 30, yy - 30, 'icon_move');
+          unitMenu.move.inputEnabled = true;
+          unitMenu.move.events.onInputDown.add(function(){
+            unitMenu.mode = "move";
+            DeselectRange();
+            self.showRange();
+          })
+        }
+      }
 
      self.distanceToTile = function(x, y) {
        return Math.abs(self.x - x) + Math.abs(self.y - y);
@@ -773,9 +860,9 @@ window.addEventListener("load", function(evt) {
                    var temp = tileArray[path[v].x][path[v].y];
                    pathDistance += temp.movementModifier();
                  }
-                 if (pathDistance <= self.attributes.Spd){
+                 if ((unitMenu.mode == "move" || unitMenu.mode == "") && pathDistance <= self.attributes.Spd){
                    //if there's a valid path, it's a nice blue overlay
-                   if (overlayArray[ti][tk]) {
+                   if (unitMenu.mode == "" && overlayArray[ti][tk]) {
                      overlayArray[ti][tk].destroy();
                      overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].x * TILESIZE, tileArray[ti][tk].y * TILESIZE, 'purple_overlay');
                      overlayArray[ti][tk].alpha = 0.75;
@@ -788,7 +875,7 @@ window.addEventListener("load", function(evt) {
              });
            }
 
-           if (self.distanceToTile(i, k) <= maxAttackRange && self.distanceToTile(i, k) >= minAttackRange && self.hasSightTo(i, k)) {
+           if ((unitMenu.mode == "attack" || unitMenu.mode == "") && self.distanceToTile(i, k) <= maxAttackRange && self.distanceToTile(i, k) >= minAttackRange && self.hasSightTo(i, k)) {
              if (tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team == myTeam) continue;
               overlayArray[i][k] = game.add.sprite(tileArray[i][k].x * TILESIZE, tileArray[i][k].y * TILESIZE, 'red_overlay');
               overlayArray[i][k].alpha = 0.75;
@@ -835,49 +922,12 @@ window.addEventListener("load", function(evt) {
          print("------------", "weapons-output");
        })
 
-       if (myTurn() && myTeam != self.team && selectedUnit && selectedUnit.team === myTeam && selectedUnit.combatCount > 0) {
-         selectedUnit.attributes.Weapons.forEach(function(w){
-           print("ATTACK with:", "weapons-output");
-           print("------------", "weapons-output");
-           print(w.DisplayName, "weapons-output");
-           print("Durability: " + w.UsesRemaining, "weapons-output");
-           print("ATK: " + w.Atk + " (+" + tileArray[self.x][self.y].attackModifier() + ")", "weapons-output");
-           print("RNG: " + w.Rng, "weapons-output");
-           print("DMG: " + w.Dmg + " (+" + tileArray[self.x][self.y].damageModifier() + ")", "weapons-output");
-           print("HIT: " + 100 - ((self.attributes.Def - w.Atk) * 5) + "%", "weapons-output");
-           var useBtn = '<button id="' + w.Uid + '">Use</button>';
-           print(useBtn, "weapons-output");
-           document.getElementById(w.Uid).addEventListener("click", function(){
-             var ret = {};
-             ret.messageType = "game_use_weapon";
-             ret.message = {};
-             ret.message.uid = selectedUnit.uid;
-             ret.message.target = self.uid;
-             ret.message.weapon = w.Uid;
-             ret.message = JSON.stringify(ret.message)
-             ws.send(JSON.stringify(ret));
-             console.log("attacked with weapon " + w.Uid);
-           });
-           print("------------", "weapons-output");
-         })
-       }
-
        if (self.attributes.Keywords) {
          self.attributes.Keywords.forEach(function(kw){
            print(kw, "card-output");
          });
        }
      }
-
-      this.sprite.events.onInputDown.add(function(){
-        if (selectedUnit && selectedUnit.team !== self.team && selectedUnit.combatCount > 0 && selectedUnit.team == myTeam) {
-
-        } else {
-          cursor.x = self.x * TILESIZE;
-          cursor.y = self.y * TILESIZE;
-          selectedUnit = self;
-        }
-      })
 
       self.move = function(x, y) {
         findPath(self.x, self.y, x, y, function(path) {
@@ -1155,7 +1205,7 @@ window.addEventListener("load", function(evt) {
               var newSprite = game.add.sprite(t.x * TILESIZE, t.y * TILESIZE, 'terrain');
               newSprite.frame = json.layers[i].data[j] - 1;
               newSprite.events.onInputDown.add(function(e){
-                if (inGame && selectedUnit && selectedUnit.team == myTeam && myTurn() && tileArray[e.x / TILESIZE][e.y / TILESIZE].walkable) {
+                if (unitMenu.mode == "move" && inGame && selectedUnit && selectedUnit.team == myTeam && myTurn() && tileArray[e.x / TILESIZE][e.y / TILESIZE].walkable) {
                   selectedUnit.move(e.x / TILESIZE, e.y / TILESIZE);
                 }
               });
@@ -1252,11 +1302,11 @@ window.addEventListener("load", function(evt) {
           }
 
           if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)){
+            DeselectRange();
+            selectedUnit = null;
+            cursor.x = -48;
+            cursor.y = -48;
             if (lastMessage['default'] != "It is your turn." && lastMessage['default'] != "It is your opponents turn.") {
-              DeselectRange();
-              selectedUnit = null;
-              cursor.x = -48;
-              cursor.y = -48;
               if (myTurn()) print("It is your turn.");
               else print("It is your opponents turn.");
             }
