@@ -489,7 +489,7 @@ window.addEventListener("load", function(evt) {
         matrix[i] = new Array(h);
         for (var k = 0; k < h; k++) {
           if (tileArray[i][k].walkable && !tileArray[i][k].unit) {
-            if (tileArray[i][k].tileType != 'grass') matrix[i][k] = 2;
+            if (tileArray[i][k].tileType != 'grass') matrix[i][k] = tileArray[i][k].movementModifier();
             else matrix[i][k] = 1;
           } else {
             matrix[i][k] = 0;
@@ -696,6 +696,10 @@ window.addEventListener("load", function(evt) {
       this.uid = params.Uid;
       this.attributes = params.Attributes;
       this.value = params.Value;
+      this.defenseMod = 0;
+      this.attackMod = 0;
+      this.movementMod = 0;
+      this.damageMod = 0;
       var style = { font: "20px pixelFont", fill: "red", boundsAlignH: "center", boundsAlignV: "middle" };
       this.hpsprite = this.sprite.addChild(game.make.text(TILESIZE - 15, TILESIZE - 15, this.attributes.Hps, style))
       tileArray[this.x][this.y].unit = this.uid;
@@ -767,19 +771,7 @@ window.addEventListener("load", function(evt) {
                  var pathDistance  = 0;
                  for (var v = 1; v < path.length; v++) {
                    var temp = tileArray[path[v].x][path[v].y];
-                   switch (temp.tileType) {
-                     case 'mountain':
-                       pathDistance += 2;
-                       break;
-                     case 'forest':
-                       pathDistance += 2;
-                       break;
-                     case 'grass':
-                       pathDistance += 1;
-                       break;
-                     default:
-                       pathDistance += self.attributes.Spd + 1;
-                   }
+                   pathDistance += temp.movementModifier();
                  }
                  if (pathDistance <= self.attributes.Spd){
                    //if there's a valid path, it's a nice blue overlay
@@ -822,8 +814,7 @@ window.addEventListener("load", function(evt) {
        print("team: " + self.color, 'hud-output');
        print("hitpoints: " + self.attributes.Hps, 'stat-output');
        print("speed: " + self.attributes.Spd, 'stat-output');
-       print("defense: " + self.attributes.Def, 'stat-output');
-       print("terrain bonus: " + tileArray[self.x][self.y].defenseBonus(), 'stat-output');
+       print("defense: " + self.attributes.Def + " (+" + tileArray[self.x][self.y].defenseModifier() + ")", 'stat-output');
        print("armor: " + self.attributes.Amr, 'stat-output');
        print("value: " + self.value, 'stat-output');
 
@@ -850,9 +841,9 @@ window.addEventListener("load", function(evt) {
            print("------------", "weapons-output");
            print(w.DisplayName, "weapons-output");
            print("Durability: " + w.UsesRemaining, "weapons-output");
-           print("ATK: " + w.Atk, "weapons-output");
+           print("ATK: " + w.Atk + " (+" + tileArray[self.x][self.y].attackModifier() + ")", "weapons-output");
            print("RNG: " + w.Rng, "weapons-output");
-           print("DMG: " + w.Dmg, "weapons-output");
+           print("DMG: " + w.Dmg + " (+" + tileArray[self.x][self.y].damageModifier() + ")", "weapons-output");
            print("HIT: " + 100 - ((self.attributes.Def - w.Atk) * 5) + "%", "weapons-output");
            var useBtn = '<button id="' + w.Uid + '">Use</button>';
            print(useBtn, "weapons-output");
@@ -970,17 +961,18 @@ window.addEventListener("load", function(evt) {
         return Math.abs(self.x - x) + Math.abs(self.y - y);
       }
 
-      this.defenseBonus = function() {
-        switch (self.tileType) {
-          case 'mountain':
-            return 4
-            break;
-          case 'forest':
-            return 4
-            break;
-          default:
-            return 0;
-        }
+      this.defenseModifier = function() {
+        return self.defenseMod;
+      }
+      this.attackModifier = function() {
+        return self.attackMod;
+      }
+      this.damageModifier = function() {
+        return self.damageMod;
+      }
+      this.movementModifier = function() {
+        if (!self.movementMod) return 1;
+        return self.movementMod;
       }
     }
 
@@ -1148,6 +1140,11 @@ window.addEventListener("load", function(evt) {
                 t.spawnTeam = json.layers[i].properties.SpawnTeam;
                 drawTile = false;
               }
+              if (json.layers[i].properties.MovementModifier) t.movementMod = json.layers[i].properties.MovementModifier;
+              if (json.layers[i].properties.DefenseModifier) t.defenseMod = json.layers[i].properties.DefenseModifier;
+              if (json.layers[i].properties.AttackModifier) t.attackMod = json.layers[i].properties.AttackModifier;
+              if (json.layers[i].properties.DamageModifier) t.damageMod = json.layers[i].properties.DamageModifier;
+
               if (json.layers[i].properties.TileType) t.tileType = json.layers[i].properties.TileType ;
               if (json.layers[i].properties.BlocksVision) t.blocksVision = json.layers[i].properties.BlocksVision ;
               if (json.layers[i].properties.Objective){
@@ -1158,8 +1155,7 @@ window.addEventListener("load", function(evt) {
               var newSprite = game.add.sprite(t.x * TILESIZE, t.y * TILESIZE, 'terrain');
               newSprite.frame = json.layers[i].data[j] - 1;
               newSprite.events.onInputDown.add(function(e){
-                console.log(tileArray[e.x / TILESIZE][e.y / TILESIZE])
-                if (inGame && selectedUnit && selectedUnit.team == myTeam && myTurn()) {
+                if (inGame && selectedUnit && selectedUnit.team == myTeam && myTurn() && tileArray[e.x / TILESIZE][e.y / TILESIZE].walkable) {
                   selectedUnit.move(e.x / TILESIZE, e.y / TILESIZE);
                 }
               });

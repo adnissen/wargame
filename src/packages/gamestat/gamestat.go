@@ -297,8 +297,8 @@ func (g *GameStat) Attack(attacker *units.Unit, defender *units.Unit, w *units.W
 		}
 	}
 
-	if (r + w.Atk + attackModifier) > (defender.Attributes.Def + g.GetTile(defender.X, defender.Y).DefenseBonus()) {
-		damage = ((w.Dmg + damageModifier) - defender.Attributes.Amr)
+	if ((r + w.Atk + attackModifier) + g.GetTile(attacker.X, attacker.Y).AttackModifier()) > (defender.Attributes.Def + g.GetTile(defender.X, defender.Y).DefenseModifier()) {
+		damage = ((w.Dmg + damageModifier + g.GetTile(defender.X, defender.Y).DamageModifier()) - defender.Attributes.Amr)
 		defender.Attributes.Hps = defender.Attributes.Hps - damage
 		if defender.Attributes.Hps <= 0 {
 			delete(g.UnitActionCounts, defender.Uid.String())
@@ -329,23 +329,14 @@ func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 	}
 
 	if gamemap.DistanceBetweenTiles(unit.X, unit.Y, moves[len(moves)-1][0], moves[len(moves)-1][1]) > unit.Attributes.Spd {
-		fmt.Print("Failed at ")
-
-		fmt.Println(2)
 		return false
 	}
 
 	if len(moves) == 1 {
-		fmt.Print("Failed at ")
-		fmt.Println(3)
-
 		return false
 	}
 
 	if len(moves)-1 > unit.Attributes.Spd {
-		fmt.Print("Failed at ")
-		fmt.Println(4)
-
 		return false
 	}
 
@@ -356,17 +347,7 @@ func (g *GameStat) MoveUnit(unit *units.Unit, moves [][]int) bool {
 		}
 
 		tt := g.GetTile(moves[j][0], moves[j][1])
-		switch tt.TileType {
-		case "mountain":
-			pathDistance += 2
-			break
-		case "forest":
-			pathDistance += 2
-			break
-		case "grass":
-			pathDistance += 1
-			break
-		}
+		pathDistance += tt.MovementModifier()
 	}
 
 	if pathDistance > unit.Attributes.Spd {

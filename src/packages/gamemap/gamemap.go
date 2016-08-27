@@ -23,6 +23,10 @@ type Tile struct {
 	X            int
 	Y            int
 	Unit         *units.Unit
+	AttackMod    int
+	DefenseMod   int
+	DamageMod    int
+	MovementMod  int
 }
 
 type Map struct {
@@ -78,6 +82,18 @@ func ImportMap(s string) Map {
 					if val, ok := props["BlocksVision"]; ok {
 						tile.BlocksVision = val.(bool)
 					}
+					if val, ok := props["DamageModifier"]; ok {
+						tile.DamageMod = int(val.(float64))
+					}
+					if val, ok := props["AttackModifier"]; ok {
+						tile.AttackMod = int(val.(float64))
+					}
+					if val, ok := props["DefenseModifier"]; ok {
+						tile.DefenseMod = int(val.(float64))
+					}
+					if val, ok := props["MovementModifier"]; ok {
+						tile.MovementMod = int(val.(float64))
+					}
 					tile.X = tx
 					tile.Y = ty
 
@@ -106,15 +122,23 @@ func SaveMap(s string) {
 	fmt.Println("saved map!")
 }
 
-func (t *Tile) DefenseBonus() int {
-	switch t.TileType {
-	case "mountain":
-		return 4
-	case "forest":
-		return 4
-	default:
-		return 0
+func (t *Tile) DefenseModifier() int {
+	return t.DefenseMod
+}
+
+func (t *Tile) AttackModifier() int {
+	return t.AttackMod
+}
+
+func (t *Tile) DamageModifier() int {
+	return t.DamageMod
+}
+
+func (t *Tile) MovementModifier() int {
+	if t.MovementMod == 0 {
+		return 1
 	}
+	return t.MovementMod
 }
 
 func (m *Map) GetTileByIndex(index int) (*Tile, int, int) {
