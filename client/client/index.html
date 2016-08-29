@@ -868,11 +868,13 @@ window.addEventListener("load", function(evt) {
                    //if there's a valid path, it's a nice blue overlay
                    if (unitMenu.mode == "" && overlayArray[ti][tk]) {
                      overlayArray[ti][tk].destroy();
-                     overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].x * TILESIZE, tileArray[ti][tk].y * TILESIZE, 'purple_overlay');
+                     overlayArray[ti][tk] = game.add.sprite(self.x * TILESIZE, self.y * TILESIZE, 'purple_overlay');
                      overlayArray[ti][tk].alpha = 0.75;
+                     var tween = game.add.tween(overlayArray[ti][tk]).to({x: tileArray[ti][tk].x * TILESIZE, y: tileArray[ti][tk].y * TILESIZE}, 1000, Phaser.Easing.Quintic.Out, true);
                    } else {
-                     overlayArray[ti][tk] = game.add.sprite(tileArray[ti][tk].x * TILESIZE, tileArray[ti][tk].y * TILESIZE, 'white_overlay');
+                     overlayArray[ti][tk] = game.add.sprite(self.x * TILESIZE, self.y * TILESIZE, 'white_overlay');
                      overlayArray[ti][tk].alpha = 0.75;
+                     var tween = game.add.tween(overlayArray[ti][tk]).to({x: tileArray[ti][tk].x * TILESIZE, y: tileArray[ti][tk].y * TILESIZE}, 1000, Phaser.Easing.Quintic.Out, true);
                    }
                  }
                }
@@ -881,8 +883,9 @@ window.addEventListener("load", function(evt) {
 
            if ((unitMenu.mode == "attack" || unitMenu.mode == "") && self.distanceToTile(i, k) <= maxAttackRange && self.distanceToTile(i, k) >= minAttackRange && self.hasSightTo(i, k)) {
              if (tileArray[i][k].unit && unitHash[tileArray[i][k].unit].team == myTeam) continue;
-              overlayArray[i][k] = game.add.sprite(tileArray[i][k].x * TILESIZE, tileArray[i][k].y * TILESIZE, 'red_overlay');
+              overlayArray[i][k] = game.add.sprite(self.x * TILESIZE, self.y * TILESIZE, 'red_overlay');
               overlayArray[i][k].alpha = 0.75;
+              var tween = game.add.tween(overlayArray[i][k]).to({x: tileArray[i][k].x * TILESIZE, y: tileArray[i][k].y * TILESIZE}, 1000, Phaser.Easing.Quintic.Out, true);
            }
          }
        }
