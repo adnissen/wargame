@@ -497,6 +497,7 @@ window.addEventListener("load", function(evt) {
     var guiBlueScore;
     var searching = false;
     var lastMessage = {};
+    var weaponsMenu = {};
     var unitMenu = {};
     unitMenu.mode = "";
 
@@ -630,7 +631,9 @@ window.addEventListener("load", function(evt) {
 
       //fx
       game.load.image('melee_single', '../client/assets/sprites/melee_single.png');
-      game.load.image('single_bullet', '../client/assets/sprites/single_bullet.png')
+      game.load.image('single_bullet', '../client/assets/sprites/single_bullet.png');
+      game.load.image('weapons_menu', '../client/assets/sprites/weapons_menu.png');
+      game.load.image('weapon_detail_menu', '../client/assets/sprites/weapon_detail_menu.png');
 
 
       game.load.image('mmbg', '../client/assets/mainmenubackground.png');
@@ -688,6 +691,7 @@ window.addEventListener("load", function(evt) {
     var DeselectRange = function(){
       if (unitMenu.attack) unitMenu.attack.destroy();
       if (unitMenu.move) unitMenu.move.destroy();
+      if (weaponsMenu.sprite) weaponsMenu.sprite.destroy();
       if (overlayArray) {
         var w = overlayArray.length;
         var h = overlayArray[0].length;
@@ -736,7 +740,39 @@ window.addEventListener("load", function(evt) {
 
       this.sprite.events.onInputDown.add(function(){
         if (selectedUnit && selectedUnit.team == myTeam && unitMenu.mode == "attack" && self.team != myTeam && selectedUnit.combatCount > 0 && myTurn()) {
+          //show weapons menu
+          weaponsMenu.sprite = game.add.sprite(10, 30, "weapons_menu");
+          weaponsMenu.sprite.fixedToCamera = true;
+          var wepDetailMenu;
+          var wcount = 1;
+          //weaponsMenu.sprite.inputEnabled = true;
           selectedUnit.attributes.Weapons.forEach(function(w){
+            var style = { font: "20px pixelFont", fill: "white", boundsAlignH: "center", boundsAlignV: "middle" };
+            var wepSprite = weaponsMenu.sprite.addChild(game.make.text(10, 30 * wcount, w.DisplayName, style));
+            wepSprite.inputEnabled = true;
+            wepSprite.events.onInputOver.add(function(e){
+              if (wepDetailMenu) wepDetailMenu.destroy();
+              wepDetailMenu = weaponsMenu.sprite.addChild(game.add.sprite(200, 0, "weapon_detail_menu"));
+              e.fill = "red";
+              wepDetailMenu.addChild(game.make.text(10, 10, "ATK: " + w.Atk, style));
+              wepDetailMenu.addChild(game.make.text(10, 30, "RNG: " + w.Rng, style));
+              wepDetailMenu.addChild(game.make.text(10, 50, "DMG: " + w.Dmg, style));
+            }, this);
+            wepSprite.events.onInputOut.add(function(e){
+              e.fill = "white";
+              wepDetailMenu.destroy();
+            }, this);
+            wepSprite.events.onInputDown.add(function(e){
+              var ret = {};
+              ret.messageType = "game_use_weapon";
+              ret.message = {};
+              ret.message.uid = selectedUnit.uid;
+              ret.message.target = self.uid;
+              ret.message.weapon = w.Uid;
+              ret.message = JSON.stringify(ret.message)
+              ws.send(JSON.stringify(ret));
+              DeselectRange();
+            });
             print("ATTACK with:", "weapons-output");
             print("------------", "weapons-output");
             print(w.DisplayName, "weapons-output");
@@ -759,8 +795,10 @@ window.addEventListener("load", function(evt) {
               console.log("attacked with weapon " + w.Uid);
             });
             print("------------", "weapons-output");
+            wcount += 1;
           })
         } else {
+          //select the new unit
           self.showInfo();
           DeselectRange();
           self.showButtons(self.x * TILESIZE, self.y * TILESIZE, ['move', 'attack']);
@@ -769,7 +807,7 @@ window.addEventListener("load", function(evt) {
           cursor.y = self.y * TILESIZE;
           selectedUnit = self;
         }
-      });
+      }, this);
 
       self.showButtons = function(xx, yy, opts) {
         if (self.team != myTeam) return;
