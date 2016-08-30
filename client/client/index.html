@@ -691,7 +691,12 @@ window.addEventListener("load", function(evt) {
     var DeselectRange = function(){
       if (unitMenu.attack) unitMenu.attack.destroy();
       if (unitMenu.move) unitMenu.move.destroy();
-      if (weaponsMenu.sprite) weaponsMenu.sprite.destroy();
+      if (weaponsMenu.sprite) {
+        var tween = game.add.tween(weaponsMenu.sprite.cameraOffset).to({x: -200, y: 30}, 750, Phaser.Easing.Quintic.Out, true);
+        tween.onComplete.add(function(){
+          weaponsMenu.sprite.destroy();
+        });
+      }
       if (overlayArray) {
         var w = overlayArray.length;
         var h = overlayArray[0].length;
@@ -741,8 +746,9 @@ window.addEventListener("load", function(evt) {
       this.sprite.events.onInputDown.add(function(){
         if (selectedUnit && selectedUnit.team == myTeam && unitMenu.mode == "attack" && self.team != myTeam && selectedUnit.combatCount > 0 && myTurn()) {
           //show weapons menu
-          weaponsMenu.sprite = game.add.sprite(10, 30, "weapons_menu");
+          weaponsMenu.sprite = game.add.sprite(-200, 30, "weapons_menu");
           weaponsMenu.sprite.fixedToCamera = true;
+          var tween = game.add.tween(weaponsMenu.sprite.cameraOffset).to({x: 10, y: 30}, 750, Phaser.Easing.Quintic.Out, true);
           var wepDetailMenu;
           var wcount = 1;
           //weaponsMenu.sprite.inputEnabled = true;
