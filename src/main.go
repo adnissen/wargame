@@ -225,7 +225,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 				newClient.User = record
 				newClient.SendMessageOfType("create_user_result", []byte("success"))
 				record.AddArmy(db, army.Army{Name: "Humans", SquadIds: []int{0, 2, 0}})
-				record.AddArmy(db, army.Army{Name: "Goblins", SquadIds: []int{4, 3, 4}})
+				record.AddArmy(db, army.Army{Name: "Goblins", SquadIds: []int{4, 3, 4, 4}})
 				newClient.SendMessageOfType("client_information", record.ToJson(db))
 			} else {
 				newClient.SendMessageOfType("create_user_result", []byte("failure"))
