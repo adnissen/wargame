@@ -333,7 +333,7 @@ window.addEventListener("load", function(evt) {
                   cursor.x = u.x * TILESIZE;
                   cursor.y = u.y * TILESIZE;
                   u.showInfo();
-                  DeselectRange();
+                  DeselectRange(true);
                   u.showButtons(u.x * TILESIZE, u.y * TILESIZE, ['move', 'attack']);
                   u.showRange();
                 }
@@ -634,7 +634,7 @@ window.addEventListener("load", function(evt) {
       game.load.image('single_bullet', '../client/assets/sprites/single_bullet.png');
       game.load.image('weapons_menu', '../client/assets/sprites/weapons_menu.png');
       game.load.image('weapon_detail_menu', '../client/assets/sprites/weapon_detail_menu.png');
-
+      game.load.image('unit_detail_menu', '../client/assets/sprites/unit_detail_menu.png');
 
       game.load.image('mmbg', '../client/assets/mainmenubackground.png');
       game.load.image('playbutton', '../client/assets/playbutton.png');
@@ -688,14 +688,12 @@ window.addEventListener("load", function(evt) {
       }
     }
 
-    var DeselectRange = function(){
+    var DeselectRange = function(keepUnitInfo){
+      unitMenu.mode == "";
       if (unitMenu.attack) unitMenu.attack.destroy();
       if (unitMenu.move) unitMenu.move.destroy();
-      if (weaponsMenu.sprite) {
-        var tween = game.add.tween(weaponsMenu.sprite.cameraOffset).to({x: -200, y: 30}, 750, Phaser.Easing.Quintic.Out, true);
-        tween.onComplete.add(function(){
-          weaponsMenu.sprite.destroy();
-        });
+      if (weaponsMenu.sprite && !keepUnitInfo) {
+        weaponsMenu.sprite.destroy();
       }
       if (overlayArray) {
         var w = overlayArray.length;
@@ -743,31 +741,32 @@ window.addEventListener("load", function(evt) {
 
       var self = this;
 
-      this.sprite.events.onInputDown.add(function(){
-        if (selectedUnit && selectedUnit.team == myTeam && unitMenu.mode == "attack" && self.team != myTeam && selectedUnit.combatCount > 0 && myTurn()) {
-          //show weapons menu
-          weaponsMenu.sprite = game.add.sprite(-200, 30, "weapons_menu");
-          weaponsMenu.sprite.fixedToCamera = true;
-          var tween = game.add.tween(weaponsMenu.sprite.cameraOffset).to({x: 10, y: 30}, 750, Phaser.Easing.Quintic.Out, true);
-          var wepDetailMenu;
-          var wcount = 1;
-          //weaponsMenu.sprite.inputEnabled = true;
-          selectedUnit.attributes.Weapons.forEach(function(w){
-            var style = { font: "20px pixelFont", fill: "white", boundsAlignH: "center", boundsAlignV: "middle" };
-            var wepSprite = weaponsMenu.sprite.addChild(game.make.text(10, 30 * wcount, w.DisplayName, style));
-            wepSprite.inputEnabled = true;
-            wepSprite.events.onInputOver.add(function(e){
-              if (wepDetailMenu) wepDetailMenu.destroy();
-              wepDetailMenu = weaponsMenu.sprite.addChild(game.add.sprite(200, 0, "weapon_detail_menu"));
-              e.fill = "red";
-              wepDetailMenu.addChild(game.make.text(10, 10, "ATK: " + w.Atk, style));
-              wepDetailMenu.addChild(game.make.text(10, 30, "RNG: " + w.Rng, style));
-              wepDetailMenu.addChild(game.make.text(10, 50, "DMG: " + w.Dmg, style));
-            }, this);
-            wepSprite.events.onInputOut.add(function(e){
-              e.fill = "white";
-              wepDetailMenu.destroy();
-            }, this);
+      self.showWeapons = function(clickable) {
+        //if (weaponsMenu.sprite) weaponsMenu.sprite.destroy();
+        weaponsMenu.sprite = game.add.sprite(-200, 30, "weapons_menu");
+        weaponsMenu.sprite.fixedToCamera = true;
+        var tween = game.add.tween(weaponsMenu.sprite.cameraOffset).to({x: 10, y: 30}, 750, Phaser.Easing.Quintic.Out, true);
+        var wepDetailMenu;
+        var wcount = 1;
+        //weaponsMenu.sprite.inputEnabled = true;
+        selectedUnit.attributes.Weapons.forEach(function(w){
+          var style = { font: "20px pixelFont", fill: "white", boundsAlignH: "center", boundsAlignV: "middle" };
+          var wepSprite = weaponsMenu.sprite.addChild(game.make.text(10, 30 * wcount, w.DisplayName, style));
+          wepSprite.inputEnabled = true;
+          wepSprite.events.onInputOver.add(function(e){
+            if (wepDetailMenu) wepDetailMenu.destroy();
+            wepDetailMenu = weaponsMenu.sprite.addChild(game.add.sprite(200, 0, "weapon_detail_menu"));
+            e.fill = "red";
+            wepDetailMenu.addChild(game.make.text(10, 10, "ATK: " + w.Atk, style));
+            wepDetailMenu.addChild(game.make.text(10, 30, "RNG: " + w.Rng, style));
+            wepDetailMenu.addChild(game.make.text(10, 50, "DMG: " + w.Dmg, style));
+          }, this);
+          wepSprite.events.onInputOut.add(function(e){
+            e.fill = "white";
+            wepDetailMenu.destroy();
+          }, this);
+
+          if (clickable) {
             wepSprite.events.onInputDown.add(function(e){
               var ret = {};
               ret.messageType = "game_use_weapon";
@@ -779,43 +778,32 @@ window.addEventListener("load", function(evt) {
               ws.send(JSON.stringify(ret));
               DeselectRange();
             });
-            print("ATTACK with:", "weapons-output");
-            print("------------", "weapons-output");
-            print(w.DisplayName, "weapons-output");
-            print("Durability: " + w.UsesRemaining, "weapons-output");
-            print("ATK: " + w.Atk + " (+" + tileArray[self.x][self.y].attackModifier() + ")", "weapons-output");
-            print("RNG: " + w.Rng, "weapons-output");
-            print("DMG: " + w.Dmg + " (+" + tileArray[self.x][self.y].damageModifier() + ")", "weapons-output");
-            print("HIT: " + 100 - ((self.attributes.Def - w.Atk) * 5) + "%", "weapons-output");
-            var useBtn = '<button id="' + w.Uid + '">Use</button>';
-            print(useBtn, "weapons-output");
-            document.getElementById(w.Uid).addEventListener("click", function(){
-              var ret = {};
-              ret.messageType = "game_use_weapon";
-              ret.message = {};
-              ret.message.uid = selectedUnit.uid;
-              ret.message.target = self.uid;
-              ret.message.weapon = w.Uid;
-              ret.message = JSON.stringify(ret.message)
-              ws.send(JSON.stringify(ret));
-              console.log("attacked with weapon " + w.Uid);
-            });
-            print("------------", "weapons-output");
-            wcount += 1;
-          })
+          }
+          wcount += 1;
+        })
+      }
+
+      this.sprite.events.onInputDown.add(function(){
+        game.camera.focusOn(self.sprite);
+        if (selectedUnit && selectedUnit.team == myTeam && unitMenu.mode == "attack" && self.team != myTeam && selectedUnit.combatCount > 0 && myTurn()) {
+          //show weapons menu
+          DeselectRange();
+          self.showWeapons(true)
         } else {
           //select the new unit
-          self.showInfo();
           DeselectRange();
-          self.showButtons(self.x * TILESIZE, self.y * TILESIZE, ['move', 'attack']);
+          selectedUnit = self;
+          self.showInfo();
           self.showRange();
+          self.showButtons(self.x * TILESIZE, self.y * TILESIZE, ['move', 'attack']);
+          self.showWeapons(false);
           cursor.x = self.x * TILESIZE;
           cursor.y = self.y * TILESIZE;
-          selectedUnit = self;
         }
       }, this);
 
       self.showButtons = function(xx, yy, opts) {
+        if (!myTurn()) return;
         if (self.team != myTeam) return;
 
         unitMenu.mode = "";
@@ -828,7 +816,7 @@ window.addEventListener("load", function(evt) {
           unitMenu.attack.inputEnabled = true;
           unitMenu.attack.events.onInputDown.add(function(){
             unitMenu.mode = "attack";
-            DeselectRange();
+            DeselectRange(true);
             self.showRange();
           })
         }
@@ -839,7 +827,7 @@ window.addEventListener("load", function(evt) {
           unitMenu.move.inputEnabled = true;
           unitMenu.move.events.onInputDown.add(function(){
             unitMenu.mode = "move";
-            DeselectRange();
+            DeselectRange(true);
             self.showRange();
           })
         }
@@ -874,7 +862,7 @@ window.addEventListener("load", function(evt) {
          return;
        }
 
-       if (self.team == myTeam && unitMenu.mode == "") return;
+       if (self.team == myTeam && myTurn() && unitMenu.mode == "") return;
        var maxAttackRange = 1;
        var minAttackRange = 99999;
        self.attributes.Weapons.forEach(function(w){
