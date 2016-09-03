@@ -301,6 +301,7 @@ window.addEventListener("load", function(evt) {
                   loadUnits(m);
                   cursor = game.add.sprite(0, 0, 'tile_outline_' + myColor);
                   clearInterval(t);
+                  hudLayer = game.add.group();
                   updateScores(0, 0);
                 }, 100);
                 break;
@@ -332,7 +333,7 @@ window.addEventListener("load", function(evt) {
                 if (selectedUnit == u) {
                   cursor.x = u.x * TILESIZE;
                   cursor.y = u.y * TILESIZE;
-                  u.showInfo();
+                  //u.showInfo();
                   DeselectRange(true);
                   u.showButtons(u.x * TILESIZE, u.y * TILESIZE, ['move', 'attack']);
                   u.showRange();
@@ -498,8 +499,10 @@ window.addEventListener("load", function(evt) {
     var searching = false;
     var lastMessage = {};
     var weaponsMenu = {};
+    var informationMenu = {};
     var unitMenu = {};
     unitMenu.mode = "";
+    var hudLayer;
 
     function myTurn() {
       return currentTurn === myTeam;
@@ -695,6 +698,10 @@ window.addEventListener("load", function(evt) {
       if (weaponsMenu.sprite && !keepUnitInfo) {
         weaponsMenu.sprite.destroy();
       }
+
+      if (weaponsMenu.sprite && !keepUnitInfo) {
+        informationMenu.sprite.destroy();
+      }
       if (overlayArray) {
         var w = overlayArray.length;
         var h = overlayArray[0].length;
@@ -743,7 +750,7 @@ window.addEventListener("load", function(evt) {
 
       self.showWeapons = function(clickable) {
         //if (weaponsMenu.sprite) weaponsMenu.sprite.destroy();
-        weaponsMenu.sprite = game.add.sprite(-200, 30, "weapons_menu");
+        weaponsMenu.sprite = hudLayer.create(-200, 30, "weapons_menu");
         weaponsMenu.sprite.fixedToCamera = true;
         var tween = game.add.tween(weaponsMenu.sprite.cameraOffset).to({x: 10, y: 30}, 750, Phaser.Easing.Quintic.Out, true);
         var wepDetailMenu;
@@ -926,6 +933,18 @@ window.addEventListener("load", function(evt) {
      self.notifyAnimation = function(key, color){}
 
      self.showInfo = function(){
+       if (informationMenu.sprite) informationMenu.sprite.destroy();
+       var style = { font: "18px pixelFont", fill: "white", boundsAlignH: "center", boundsAlignV: "middle" };
+       informationMenu.sprite = hudLayer.create(game.width, 30, "unit_detail_menu");
+       informationMenu.sprite.fixedToCamera = true;
+       informationMenu.sprite.addChild(game.make.text(10, 10, self.displayName, style));
+       informationMenu.sprite.addChild(game.make.text(10, 30, "hitpoints: " + self.attributes.Hps, style));
+       informationMenu.sprite.addChild(game.make.text(10, 50, "speed: " + self.attributes.Spd, style));
+       informationMenu.sprite.addChild(game.make.text(10, 70, "defense: " + self.attributes.Def, style));
+       informationMenu.sprite.addChild(game.make.text(10, 90, "armor: " + self.attributes.Amr, style));
+       informationMenu.sprite.addChild(game.make.text(10, 110, "value: " + self.value, style));
+       var tween = game.add.tween(informationMenu.sprite.cameraOffset).to({x: game.width - 200, y: 30}, 750, Phaser.Easing.Quintic.Out, true);
+       var wepDetailMenu;
        clr('hud-output');
        clr('stat-output');
        clr('weapons-output');
@@ -1113,6 +1132,7 @@ window.addEventListener("load", function(evt) {
     }
 
     function clearMap() {
+      if (hudLayer) hudLayer.destroy();
       game.world.removeAll();
       unitHash = {};
       var btn = document.getElementById('endturn');
@@ -1198,7 +1218,6 @@ window.addEventListener("load", function(evt) {
       game.world.scale.set(1);
       game.camera.bounds = undefined;
       game.stage.disableVisibilityChange = true;
-
       displayMainMenu();
     }
 
