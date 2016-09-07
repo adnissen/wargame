@@ -477,6 +477,7 @@ window.addEventListener("load", function(evt) {
     var lastMessage = {};
     var weaponsMenu = {};
     var informationMenu = {};
+    var tileDetailPane = {};
     var unitMenu = {};
     unitMenu.mode = "";
     var hudLayer;
@@ -615,6 +616,8 @@ window.addEventListener("load", function(evt) {
       game.load.image('weapons_menu', '../client/assets/sprites/weapons_menu.png');
       game.load.image('weapon_detail_menu', '../client/assets/sprites/weapon_detail_menu.png');
       game.load.image('unit_detail_menu', '../client/assets/sprites/unit_detail_menu.png');
+      game.load.image('tile_detail_pane', '../client/assets/sprites/tile_detail.png');
+
 
       game.load.image('mmbg', '../client/assets/mainmenubackground.png');
       game.load.image('playbutton', '../client/assets/playbutton.png');
@@ -680,6 +683,7 @@ window.addEventListener("load", function(evt) {
 
       if (weaponsMenu.sprite && !keepUnitInfo) {
         informationMenu.sprite.destroy();
+        tileDetailPane.sprite.destroy();
       }
       if (overlayArray) {
         var w = overlayArray.length;
@@ -775,6 +779,7 @@ window.addEventListener("load", function(evt) {
           //show weapons menu
           DeselectRange();
           self.showWeapons(true)
+          tileArray[self.x][self.y].showInfo();
         } else {
           //select the new unit
           DeselectRange();
@@ -783,6 +788,7 @@ window.addEventListener("load", function(evt) {
           self.showRange();
           self.showButtons(self.x * TILESIZE, self.y * TILESIZE, ['move', 'attack']);
           self.showWeapons(false);
+          tileArray[self.x][self.y].showInfo();
           cursor.x = self.x * TILESIZE;
           cursor.y = self.y * TILESIZE;
         }
@@ -1044,22 +1050,51 @@ window.addEventListener("load", function(evt) {
 
       var self = this;
 
+
+
       this.distanceToTile = function(x, y) {
         return Math.abs(self.x - x) + Math.abs(self.y - y);
       }
 
       this.defenseModifier = function() {
+        if (typeof(self.defenseMod) == 'undefined') return 0;
         return self.defenseMod;
       }
       this.attackModifier = function() {
+        if (typeof(self.attackMod) == 'undefined') return 0;
         return self.attackMod;
       }
       this.damageModifier = function() {
+        if (typeof(self.damageMod) == 'undefined') return 0;
         return self.damageMod;
       }
       this.movementModifier = function() {
-        if (!self.movementMod) return 1;
+        if (typeof(self.movementMod) == 'undefined') return 0;
         return self.movementMod;
+      }
+      this.showInfo = function(){
+        if (tileDetailPane.sprite) tileDetailPane.sprite.destroy();
+        var style = { font: "18px pixelFont", fill: "white", boundsAlignH: "center", boundsAlignV: "middle" };
+        tileDetailPane.sprite = hudLayer.create(game.width, 350, "tile_detail_pane");
+        tileDetailPane.sprite.fixedToCamera = true;
+        tileDetailPane.sprite.addChild(game.make.text(10, 10, "Def Mod: " + self.defenseModifier(), style));
+        tileDetailPane.sprite.addChild(game.make.text(10, 30, "Atk Mod: " + self.attackModifier(), style));
+        tileDetailPane.sprite.addChild(game.make.text(10, 50, "Dmg Mod: " + self.damageModifier(), style));
+        tileDetailPane.sprite.addChild(game.make.text(10, 70, "Mov Mod: " + self.movementModifier(), style));
+        var loc = 90;
+        if (!self.walkable) {
+          tileDetailPane.sprite.addChild(game.make.text(10, loc, "Blocks Movement", style));
+          loc = loc + 20;
+        }
+        if (self.blocksVision) {
+          tileDetailPane.sprite.addChild(game.make.text(10, loc, "Blocks Vision", style));
+          loc = loc + 20;
+        }  
+        if (self.objective) {
+          tileDetailPane.sprite.addChild(game.make.text(10, loc, "Objective", style));
+          loc = loc + 20;
+        }
+        var tween = game.add.tween(tileDetailPane.sprite.cameraOffset).to({x: game.width - 200, y: 350}, 750, Phaser.Easing.Quintic.Out, true);
       }
     }
 
@@ -1246,12 +1281,20 @@ window.addEventListener("load", function(evt) {
             if (drawTile) {
               var newSprite = game.add.sprite(t.x * TILESIZE, t.y * TILESIZE, 'terrain');
               newSprite.frame = json.layers[i].data[j] - 1;
-              newSprite.events.onInputDown.add(function(e){
-                if (unitMenu.mode == "move" && inGame && selectedUnit && selectedUnit.team == myTeam && myTurn() && tileArray[e.x / TILESIZE][e.y / TILESIZE].walkable) {
-                  selectedUnit.move(e.x / TILESIZE, e.y / TILESIZE);
-                }
-              });
-              newSprite.inputEnabled = true;
+              if (!tileArray[t.x][t.y].sprite) {
+                newSprite.events.onInputDown.add(function(e){
+                  if (unitMenu.mode == "move" && inGame && selectedUnit && selectedUnit.team == myTeam && myTurn() && tileArray[e.x / TILESIZE][e.y / TILESIZE].walkable) {
+                    selectedUnit.move(e.x / TILESIZE, e.y / TILESIZE);
+                  } else {
+                    DeselectRange();
+                    tileArray[e.x / TILESIZE][e.y / TILESIZE].showInfo();
+                    cursor.x = e.x;
+                    cursor.y = e.y;
+                  }
+                });
+                newSprite.inputEnabled = true;
+                tileArray[t.x][t.y].sprite = newSprite;
+              }
             }
           }
         }
