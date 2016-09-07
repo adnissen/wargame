@@ -220,7 +220,7 @@ func echo(w http.ResponseWriter, r *http.Request) {
 			email := dat["email"].(string)
 			code := dat["code"].(string)
 
-			record := userpkg.CreateUser(db, username, pass, email, code)
+			record := userpkg.CreateUser(db, username, email, pass, code)
 			if record != nil {
 				newClient.User = record
 				newClient.SendMessageOfType("create_user_result", []byte("success"))

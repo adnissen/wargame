@@ -17,10 +17,7 @@
 
       #game {
         position: absolute;
-        top: 50px;
         left: 0;
-        width: 800px;
-        height: 600px;
       }
 
       #output {
@@ -102,6 +99,7 @@ window.addEventListener("load", function(evt) {
     var ws;
 
     var print = function(message, id) {
+        return;
         var d = document.createElement("div");
         d.innerHTML = message;
         if (id) {
@@ -116,11 +114,12 @@ window.addEventListener("load", function(evt) {
     };
 
     var clr = function(id) {
-      if (id) {
-        var o = document.getElementById(id);
-        o.innerHTML = '';
-      }
-      else output.innerHTML = '';
+        return;
+        if (id) {
+          var o = document.getElementById(id);
+          o.innerHTML = '';
+        }
+        else output.innerHTML = '';
     };
 
     var loginModal = function() {
@@ -425,29 +424,6 @@ window.addEventListener("load", function(evt) {
 
     makeConnection();
 
-    document.getElementById("send").onclick = function(evt) {
-        if (!ws) {
-            return false;
-        }
-        switch (input.value) {
-          case 'new':
-            newMap();
-            break;
-          case 'code':
-            ws.send('code');
-            break;
-          default:
-            break;
-        }
-        print("SEND: " + input.value);
-        //ws.send(input.value);
-        return false;
-    };
-
-    document.getElementById('endturn').onclick = function(evt) {
-      ws.send('end_turn');
-    }
-
     function updateScores(p1, p2) {
       if (guiRedScore){
         guiRedScore.destroy();
@@ -455,16 +431,17 @@ window.addEventListener("load", function(evt) {
       }
       var style = { font: "24px pixelFont", fill: "#fff", boundsAlignH: "center", boundsAlignV: "middle" };
       guiRedScore = game.add.text(10, 10, "Red Score: " + p1, style);
-      guiBlueScore = game.add.text(600, 10, "Blue Score: " + p2, style);
+      guiBlueScore = game.add.text(game.width - 200, 10, "Blue Score: " + p2, style);
       guiRedScore.fixedToCamera = true;
       guiBlueScore.fixedToCamera = true;
     }
 
     function createGame(){
-      var game = new Phaser.Game(800, 600, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
+      var game = new Phaser.Game(1024, window.innerHeight, Phaser.AUTO, 'game', { preload: preload, create: create, update: update });
       //message = JSON.parse(message.Message);
       //game.currentMapData = message.Map;
       window.game = game;
+
     }
 
     /* PHASER GAME CLIENT BEGINS HEREEEEEEE */
@@ -642,6 +619,8 @@ window.addEventListener("load", function(evt) {
       game.load.image('mmbg', '../client/assets/mainmenubackground.png');
       game.load.image('playbutton', '../client/assets/playbutton.png');
       game.load.image('searchingbutton', '../client/assets/searchingbutton.png');
+
+
     }
 
     function resetActions() {
@@ -1145,8 +1124,10 @@ window.addEventListener("load", function(evt) {
 
     function displayMainMenu(){
       clearMap();
-      game.add.sprite(0, 0, 'mmbg');
-      var playbtn = game.add.sprite(350, 450, 'playbutton');
+      var bg = game.add.sprite(game.width / 2, game.height / 2, 'mmbg');
+      bg.anchor.setTo(0.5, 0.5);
+      var playbtn = game.add.sprite(game.width / 2, game.height  - 150 , 'playbutton');
+      playbtn.anchor.setTo(0.5, 0.5);
       playbtn.events.onInputDown.add(function(){
         if (searching) {
           ws.send('exit_queue');
@@ -1214,8 +1195,11 @@ window.addEventListener("load", function(evt) {
 
       keyQ = game.input.keyboard.addKey(Phaser.Keyboard.Q);
       keyQ.onDown.add(updateSelectedTile, this);
-
       game.world.scale.set(1);
+      //debugger
+
+      //game.scale.setScreenSize();
+      game.stage.backgroundColor = "#696a6a";
       game.camera.bounds = undefined;
       game.stage.disableVisibilityChange = true;
       displayMainMenu();
@@ -1416,14 +1400,9 @@ window.addEventListener("load", function(evt) {
 </script>
 </head>
 <body>
-<p><input id="input" type="text" value="new">
-<button id="send">Send</button>
-<button id="endturn">End Turn</button>
-<div id="weapons"></div>
 <div id="game">
 </div>
-<div id="output"></div>
-<div id="hud">
+<!-- <div id="hud">
 <img src="../client/assets/hud.png">
 <div id="hud-output"></div>
 <div id="stat-output"></div>
@@ -1434,6 +1413,6 @@ window.addEventListener("load", function(evt) {
   <img src="../client/assets/weaponshud.png">
   <div id="weapons-output"></div>
   </img>
-</div>
+</div> -->
 </body>
 </html>
