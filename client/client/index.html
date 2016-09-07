@@ -681,8 +681,11 @@ window.addEventListener("load", function(evt) {
         weaponsMenu.sprite.destroy();
       }
 
-      if (weaponsMenu.sprite && !keepUnitInfo) {
+      if (informationMenu.sprite && !keepUnitInfo) {
         informationMenu.sprite.destroy();
+      }
+
+      if (tileDetailPane.sprite && !keepUnitInfo) {
         tileDetailPane.sprite.destroy();
       }
       if (overlayArray) {
@@ -1089,7 +1092,7 @@ window.addEventListener("load", function(evt) {
         if (self.blocksVision) {
           tileDetailPane.sprite.addChild(game.make.text(10, loc, "Blocks Vision", style));
           loc = loc + 20;
-        }  
+        }
         if (self.objective) {
           tileDetailPane.sprite.addChild(game.make.text(10, loc, "Objective", style));
           loc = loc + 20;
