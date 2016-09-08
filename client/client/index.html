@@ -93,6 +93,7 @@ var loggedIn = false;
 var clientData = {};
 var mapEditorBrush = {};
 var mapEditorTool = "";
+var hudLayer;
 window.addEventListener("load", function(evt) {
     var output = document.getElementById("output");
     var input = document.getElementById("input");
@@ -279,9 +280,9 @@ window.addEventListener("load", function(evt) {
                 //debugger;
                 break;
               case 'map_data':
+                clearMap();
                 var t = setInterval(function(){
                   if (!fullyLoaded) return;
-                  clearMap();
                   inGame = true;
                   loadMap(message);
                   clearInterval(t);
@@ -300,7 +301,6 @@ window.addEventListener("load", function(evt) {
                   loadUnits(m);
                   cursor = game.add.sprite(0, 0, 'tile_outline_' + myColor);
                   clearInterval(t);
-                  hudLayer = game.add.group();
                   updateScores(0, 0);
                 }, 100);
                 break;
@@ -401,13 +401,31 @@ window.addEventListener("load", function(evt) {
                 break;
               case 'game_turn':
                 currentTurn = parseInt(message.Message);
-                var btn = document.getElementById('endturn');
+                if (endTurnButton.sprite) {
+                  //TODO: reverse tween
+                  var tween = game.add.tween(endTurnButton.sprite.cameraOffset).to({x: (game.width / 2) - 50, y: -150}, 750, Phaser.Easing.Quintic.Out, true);
+                  tween.onComplete.add(function(){
+                    endTurnButton.sprite.destroy();
+                  });
+                }
                 if (myTurn()) {
-                  btn.style.display = 'block'
                   print("It's your turn!");
+                  setTimeout(function(){
+                    endTurnButton.sprite = game.add.sprite((game.width / 2) - 50, -150, "end_turn_btn");
+                    endTurnButton.sprite.fixedToCamera = true;
+                    endTurnButton.sprite.inputEnabled = true;
+                    endTurnButton.sprite.events.onInputUp.add(function(){
+                      ws.send("end_turn");
+                    });
+                    var tween = game.add.tween(endTurnButton.sprite.cameraOffset).to({x: (game.width / 2) - 50, y: 0}, 750, Phaser.Easing.Quintic.In, true);
+                  }, 1000);
                 } else {
                   print("Your opponents turn has begun");
-                  btn.style.display = 'none'
+                  setTimeout(function(){
+                    endTurnButton.sprite = game.add.sprite((game.width / 2) - 50, -150, "enemy_turn_btn");
+                    endTurnButton.sprite.fixedToCamera = true;
+                    var tween = game.add.tween(endTurnButton.sprite.cameraOffset).to({x: (game.width / 2) - 50, y: 0}, 750, Phaser.Easing.Quintic.In, true);
+                  }, 1000)
                 }
                 resetActions();
                 break;
@@ -480,7 +498,7 @@ window.addEventListener("load", function(evt) {
     var tileDetailPane = {};
     var unitMenu = {};
     unitMenu.mode = "";
-    var hudLayer;
+    var endTurnButton = {};
 
     function myTurn() {
       return currentTurn === myTeam;
@@ -617,6 +635,8 @@ window.addEventListener("load", function(evt) {
       game.load.image('weapon_detail_menu', '../client/assets/sprites/weapon_detail_menu.png');
       game.load.image('unit_detail_menu', '../client/assets/sprites/unit_detail_menu.png');
       game.load.image('tile_detail_pane', '../client/assets/sprites/tile_detail.png');
+      game.load.image('end_turn_btn', '../client/assets/sprites/end_turn_btn.png');
+      game.load.image('enemy_turn_btn', '../client/assets/sprites/enemy_turn_btn.png');
 
 
       game.load.image('mmbg', '../client/assets/mainmenubackground.png');
@@ -736,7 +756,7 @@ window.addEventListener("load", function(evt) {
 
       self.showWeapons = function(clickable) {
         //if (weaponsMenu.sprite) weaponsMenu.sprite.destroy();
-        weaponsMenu.sprite = hudLayer.create(-200, 30, "weapons_menu");
+        weaponsMenu.sprite = game.add.sprite(-200, 30, "weapons_menu");
         weaponsMenu.sprite.fixedToCamera = true;
         var tween = game.add.tween(weaponsMenu.sprite.cameraOffset).to({x: 10, y: 30}, 750, Phaser.Easing.Quintic.Out, true);
         var wepDetailMenu;
@@ -923,7 +943,7 @@ window.addEventListener("load", function(evt) {
      self.showInfo = function(){
        if (informationMenu.sprite) informationMenu.sprite.destroy();
        var style = { font: "18px pixelFont", fill: "white", boundsAlignH: "center", boundsAlignV: "middle" };
-       informationMenu.sprite = hudLayer.create(game.width, 30, "unit_detail_menu");
+       informationMenu.sprite = game.add.sprite(game.width, 30, "unit_detail_menu");
        informationMenu.sprite.fixedToCamera = true;
        informationMenu.sprite.addChild(game.make.text(10, 10, self.displayName, style));
        informationMenu.sprite.addChild(game.make.text(10, 30, "hitpoints: " + self.attributes.Hps, style));
@@ -1078,7 +1098,7 @@ window.addEventListener("load", function(evt) {
       this.showInfo = function(){
         if (tileDetailPane.sprite) tileDetailPane.sprite.destroy();
         var style = { font: "18px pixelFont", fill: "white", boundsAlignH: "center", boundsAlignV: "middle" };
-        tileDetailPane.sprite = hudLayer.create(game.width, 350, "tile_detail_pane");
+        tileDetailPane.sprite = game.add.sprite(game.width, 350, "tile_detail_pane");
         tileDetailPane.sprite.fixedToCamera = true;
         tileDetailPane.sprite.addChild(game.make.text(10, 10, "Def Mod: " + self.defenseModifier(), style));
         tileDetailPane.sprite.addChild(game.make.text(10, 30, "Atk Mod: " + self.attackModifier(), style));
@@ -1254,7 +1274,6 @@ window.addEventListener("load", function(evt) {
     }
 
     function importTMX(json){
-      clearMap();
       tileArray = createMapArray(json.width, json.height);
       for (var i = 0; i < json.layers.length; i++) {
         for (var j = 0; j < json.layers[i].data.length; j++) {
