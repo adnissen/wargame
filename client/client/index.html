@@ -330,8 +330,7 @@ window.addEventListener("load", function(evt) {
                   u.sprite.tint = 0x333333;
                 }
                 if (selectedUnit == u) {
-                  cursor.x = u.x * TILESIZE;
-                  cursor.y = u.y * TILESIZE;
+                  SetCursorPosition(u.x * TILESIZE, u.y * TILESIZE)
                   //u.showInfo();
                   DeselectRange(true);
                   u.showButtons(u.x * TILESIZE, u.y * TILESIZE, ['move', 'attack']);
@@ -722,6 +721,16 @@ window.addEventListener("load", function(evt) {
       overlayArray = null;
     }
 
+    var SetCursorPosition = function(x, y){
+      cursor.visible = true;
+      cursor.x = x;
+      cursor.y = y;
+    }
+
+    var DeselectCursor = function() {
+      cursor.visible = false;
+    }
+
     var Unit = function(x, y, key, params){
       if (params) {
         x = params.X * TILESIZE;
@@ -812,8 +821,7 @@ window.addEventListener("load", function(evt) {
           self.showButtons(self.x * TILESIZE, self.y * TILESIZE, ['move', 'attack']);
           self.showWeapons(false);
           tileArray[self.x][self.y].showInfo();
-          cursor.x = self.x * TILESIZE;
-          cursor.y = self.y * TILESIZE;
+          SetCursorPosition(self.x * TILESIZE, self.y * TILESIZE);
         }
       }, this);
 
@@ -1310,8 +1318,7 @@ window.addEventListener("load", function(evt) {
                   } else {
                     DeselectRange();
                     tileArray[e.x / TILESIZE][e.y / TILESIZE].showInfo();
-                    cursor.x = e.x;
-                    cursor.y = e.y;
+                    SetCursorPosition(e.x, e.y);
                   }
                 });
                 newSprite.inputEnabled = true;
@@ -1411,8 +1418,7 @@ window.addEventListener("load", function(evt) {
           if (game.input.keyboard.isDown(Phaser.Keyboard.ESC)){
             DeselectRange();
             selectedUnit = null;
-            cursor.x = -48;
-            cursor.y = -48;
+            DeselectCursor();
             if (lastMessage['default'] != "It is your turn." && lastMessage['default'] != "It is your opponents turn.") {
               if (myTurn()) print("It is your turn.");
               else print("It is your opponents turn.");
