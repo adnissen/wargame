@@ -1,8 +1,5 @@
 # Elder Runes
 
-## Factions
-FACTION_0 - Known for harvesting the Runes for their raw power, FACTION_0 is the most aggressive and brutal of the armies at play.
+I'm probably not going to keep working on this, so here's what I had before I stopped. 
 
-FACTION_1 - Born out of their hatred for FACTION_0, no diplomatic ties to FACTION_2, and a lack of access to Runes, FACTION_1 uses older but more reliable technology to control the battlefield.
-
-FACTION_2 - After being incredibly isolationist for as long as anyone can remember, the discovery of new Runes has spurred FACTION_2 to open their gates and assemble their armies once again.
+If you want to see how far it came, install the go deps and run main.go, then go to the client folder and run npm install the start clients script to run the clients. Enter the queue in both clients and a game on the test map will start up.
